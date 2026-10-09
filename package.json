@@ -1,0 +1,32 @@
+{
+  "name": "centrali-play",
+  "version": "0.0.0",
+  "private": true,
+  "description": "A disposable webhook capture API",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "wrangler dev --local --ip 127.0.0.1",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typegen": "wrangler types",
+    "typecheck": "npm run typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run build"
+  },
+  "dependencies": {
+    "hono": "4.13.13"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-plugin": "1.4.0",
+    "prettier": "3.9.9",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3",
+    "wrangler": "4.149.0"
+  }
+}

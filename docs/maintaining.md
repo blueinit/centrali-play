@@ -6,15 +6,17 @@ Initial maintainer: [@buildwithmary](https://github.com/buildwithmary). CODEOWNE
 
 All changes use PRs. Keep changes focused and reviewable. Squash merges are enabled; merged branches are automatically deleted. Review all code for correctness, maintainability, and security regardless of how it was authored.
 
-Main protection requires PRs, blocks deletion and force pushes, and applies to administrators. Required approving reviews are currently zero because there is one maintainer; human approval is an explicit workflow requirement rather than a GitHub-enforced review count. CODEOWNERS requests review but does not enforce it. Require approving reviews when another maintainer joins. Add required checks once CI exists.
+Main protection requires PRs, blocks deletion and force pushes, and applies to administrators. Required approving reviews are currently zero because there is one maintainer; human approval is an explicit workflow requirement rather than a GitHub-enforced review count. CODEOWNERS requests review but does not enforce it. Require approving reviews when another maintainer joins. The CI job is named `Check`; require it on main after its first successful run.
 
 GitHub does not allow authors to approve their own PRs. Maintainer-authored PRs need another reviewer or documented self-review where only one maintainer is available.
 
-Private vulnerability reporting and dependency alerts are enabled. Add dependency-update automation with the first manifest. Review advisories, lockfiles, and install scripts.
+Private vulnerability reporting and dependency alerts are enabled. Dependabot checks npm dependencies and GitHub Actions weekly. Review advisories, lockfiles, install scripts, and pinned action updates. CI uses read-only repository permissions and does not deploy.
 
 ## Releases
 
 No release or deployment exists. Before `v0.1.0`, verify clean-checkout setup, expiry/concurrency, authorization, limits, backend failures, safe logs, and realistic polling costs. Finalize API documentation and supported versions.
+
+For routine PRs, run `npm ci` and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. The current Worker has no capture or abuse controls and is intended for local development only; public Worker and preview URLs are disabled in configuration.
 
 Use semantic version tags and release notes explaining behavior, compatibility, and known limitations. Announce breaking API changes explicitly, including before 1.0.
 

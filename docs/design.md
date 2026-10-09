@@ -1,6 +1,6 @@
 # Design
 
-The service is not implemented. This document describes the intended architecture; API details and limits may change before the first release.
+Only the local Worker skeleton and health endpoint are implemented. This document describes the intended capture architecture; API details and limits may change before the first release.
 
 ## Architecture
 
@@ -11,12 +11,14 @@ The service is not implemented. This document describes the intended architectur
 
 ## Proposed API and defaults
 
-| Operation | Purpose |
-| --- | --- |
-| `POST /sessions` | Return a session ID, capture URL, separate read token, and expiry. |
-| `ANY /capture/:captureToken` | Capture an unsigned request for a live session. |
-| `GET /sessions/:id/events` | Read events with a bearer read token. |
-| `GET /health` | Report application health without secrets. |
+| Operation                    | Purpose                                                            |
+| ---------------------------- | ------------------------------------------------------------------ |
+| `POST /sessions`             | Return a session ID, capture URL, separate read token, and expiry. |
+| `ANY /capture/:captureToken` | Capture an unsigned request for a live session.                    |
+| `GET /sessions/:id/events`   | Read events with a bearer read token.                              |
+| `GET /health`                | Report application health without secrets.                         |
+
+Only `GET /health` is available today. It returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. It checks liveness only. Other routes return JSON 404 responses. Hono also handles HEAD for GET routes, returning headers without a response body.
 
 Proposed limits: one-hour lifetime, latest 50 events, 64 KiB bodies. Header limits, rate limits, binary body encoding, and response limits remain open.
 
