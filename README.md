@@ -2,7 +2,7 @@
 
 A small, disposable webhook capture API. Create a temporary session, send HTTP requests to its capture URL, and retrieve the captured requests as JSON.
 
-**Early development:** health checks, session creation, and bounded capture work locally. Event reads are not implemented. No hosted service is available; public deployment awaits abuse controls.
+**Early development:** health checks, session creation, bounded capture, and authorized event reads work locally. No hosted service is available; public deployment awaits abuse controls.
 
 ## Purpose
 
@@ -55,7 +55,16 @@ curl -i -X POST '<captureUrl>' \
   --data '{"example":"hello"}'
 ```
 
-A successful capture returns 204 after storage confirms the write. Bodies are limited to 64 KiB, common credential headers are redacted, and the latest 50 events share the session deadline. See the [capture contract](docs/capture.md) for all limits and methods. Reading events through the API is not implemented yet. Unknown routes return JSON 404 responses; unsupported capture methods return 405.
+A successful capture returns 204 after storage confirms the write. Bodies are limited to 64 KiB, common credential headers are redacted, and the latest 50 events share the session deadline. See the [capture contract](docs/capture.md) for all limits and methods.
+
+Use the session ID and separate read token from creation to retrieve captures:
+
+```sh
+curl 'http://127.0.0.1:8787/sessions/<session-id>/events?after=0-0' \
+  -H 'Authorization: Bearer <read-token>'
+```
+
+The JSON response contains base64 bodies and a `nextCursor`. Pass that cursor as `after` on the next request to read only newer events. Pages contain up to 10 events within a 256 KiB response limit. Follow `hasMore` for additional pages; back off between empty polls as described in the [read contract](docs/reads.md). Reads never extend expiry. Unknown routes return JSON 404 responses; unsupported capture and read methods return 405.
 
 Stop the Worker and bridge with Ctrl+C, then run `docker compose down`. Development Redis has no persistent volume; removing its container discards its data.
 
@@ -77,7 +86,7 @@ Individual commands and repository structure are documented in [Contributing](CO
 - [Design](docs/design.md): architecture, proposed API, and open decisions.
 - [Session contract](docs/sessions.md): creation response, credentials, expiry, and configuration.
 - [Capture contract](docs/capture.md): methods, limits, redaction, binary encoding, and storage.
-- [Proposed event-read contract](docs/reads.md): authorization, cursor pagination, response bounds, and polling.
+- [Event-read contract](docs/reads.md): authorization, cursor pagination, response bounds, and polling.
 - [Roadmap](docs/roadmap.md): planned capabilities and release readiness.
 - [Contributing](CONTRIBUTING.md): changes, code expectations, and review.
 - [Maintaining](docs/maintaining.md): ownership, releases, deployment, and incidents.

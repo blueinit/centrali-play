@@ -1,6 +1,6 @@
 # Event-read contract
 
-This is a proposal for the next implementation stage. Event reads are not implemented yet. Public deployment also requires abuse controls and hosted compatibility checks.
+Event reads are implemented for local development. Public deployment also requires abuse controls and hosted compatibility checks.
 
 ## Request and authorization
 
@@ -55,6 +55,8 @@ Use named limits of 10 events and 262,144 bytes (256 KiB) for the complete UTF-8
 
 Bound the Redis HTTP reply as well, before buffering it. Select a page within a conservative byte budget inside Redis so large captures cannot cause an unbounded reply. Leave room for JSON encoding and response framing. Give reads a dedicated reply policy; retain the existing 4 KiB bound for creation and capture replies. Corrupt or unexpectedly oversized stored data returns a safe 503, not a partial successful page.
 
+The implementation budgets serialized stream entries to 192 KiB inside Redis and caps the complete HTTP reply at 256 KiB. The budget allows six-byte JSON escapes for HTML-sensitive characters. It retrieves one candidate at a time, up to 11 candidates for 10 returned events, including a look-ahead for `hasMore`. The Worker validates each stored event and checks the final JSON response size. Conservative budgeting can produce a shorter page even when another event might fit in the final response.
+
 All read and error responses disable caching. Do not support ETags, conditional 304 responses, long polling, server-sent events, or WebSockets in this stage. HEAD returns status and safe headers without captured content. No CORS allow headers are added.
 
 ## Atomic read and expiry
@@ -67,7 +69,7 @@ Selection, retention comparison, and `hasMore` use one consistent Redis script s
 
 Clients can fetch the next page immediately while `hasMore` is true. Otherwise begin polling at five-second intervals. After empty pages, back off to 10, 20, and then 30 seconds, with jitter; reset after receiving events. Stop at `expiresAt` or a 404. Retry a 503 with backoff. Honor `Retry-After` on future 429 responses, and never automatically create a replacement session.
 
-The intended successful read path uses two Redis HTTP calls: metadata authorization and atomic page selection. HEAD also needs Redis-time validation but skips event retrieval. Empty polling still has a cost: polling every five seconds for one hour would use approximately 1,440 HTTP calls before retries or pagination. Backoff reduces that load. Provider command billing can differ from HTTP call counts; measure both commands and bandwidth before launch.
+The successful read path uses two Redis HTTP calls: metadata authorization and atomic page selection. HEAD also needs Redis-time and cursor validation; Redis examines the stream boundaries, but no event payloads are transferred to or parsed by the Worker. Empty polling still has a cost: polling every five seconds for one hour would use approximately 1,440 HTTP calls before retries or pagination. Backoff reduces that load. Provider command billing can differ from HTTP call counts; measure both commands and bandwidth before launch.
 
 ## Errors and verification
 

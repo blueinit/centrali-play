@@ -39,6 +39,10 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 - `src/captures.ts`: capture HTTP validation and responses.
 - `src/capture-input.ts`: input bounds, sensitive-header redaction, and binary encoding.
 - `src/capture-store.ts`: live-session checks, atomic append, exact trimming, and fixed expiry.
+- `src/event-reads.ts`: read HTTP validation and responses.
+- `src/read-input.ts` and `src/read-auth.ts`: cursor/bearer validation and timing-safe authorization.
+- `src/read-script.ts` and `src/read-store.ts`: atomic page selection, expiry rechecks, and byte bounds.
+- `src/stored-event.ts`: stored schema validation and safe event reconstruction.
 - `src/session-store.ts`: atomic Redis creation script and key layout.
 - `src/redis.ts`: bounded HTTP transport with a timeout and no automatic write retries.
 - `src/config.ts`: environment and origin validation.

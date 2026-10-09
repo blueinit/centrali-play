@@ -1,6 +1,6 @@
 # Capture contract
 
-Capture is implemented for local development. Event reads remain unimplemented. Public deployment also requires the abuse controls described in the [design](design.md).
+Capture and [event reads](reads.md) are implemented for local development. Public deployment also requires the abuse controls described in the [design](design.md).
 
 ## Request and response
 
@@ -39,17 +39,17 @@ Count all headers toward limits before redaction. Capture the headers exposed by
 
 ## Stored event
 
-Each accepted request stores a versioned JSON payload in the stream's `event` field and a Redis timestamp in its `receivedAt` field. Keeping the original JSON avoids changing empty arrays during Lua encoding. The future read API will combine those fields with the stream ID into this event shape:
+Each accepted request stores a versioned JSON payload in the stream's `event` field and a Redis timestamp in its `receivedAt` field. Keeping the original JSON avoids changing empty arrays during Lua encoding. The read API combines those fields with the stream ID into this event shape:
 
-| Field        | Representation                                                                     |
-| ------------ | ---------------------------------------------------------------------------------- |
-| `version`    | Integer `1`.                                                                       |
-| `id`         | Redis stream ID assigned atomically during append; used as the future read cursor. |
-| `receivedAt` | Integer Unix milliseconds derived from Redis time at append.                       |
-| `method`     | Request method.                                                                    |
-| `query`      | Encoded query string, including `?`, or an empty string.                           |
-| `headers`    | Array of `[name, value]` pairs after redaction.                                    |
-| `body`       | `{ "encoding": "base64", "data": "…", "byteLength": 0 }`, with the actual length.  |
+| Field        | Representation                                                                    |
+| ------------ | --------------------------------------------------------------------------------- |
+| `version`    | Integer `1`.                                                                      |
+| `id`         | Redis stream ID assigned atomically during append; used as the read cursor.       |
+| `receivedAt` | Integer Unix milliseconds derived from Redis time at append.                      |
+| `method`     | Request method.                                                                   |
+| `query`      | Encoded query string, including `?`, or an empty string.                          |
+| `headers`    | Array of `[name, value]` pairs after redaction.                                   |
+| `body`       | `{ "encoding": "base64", "data": "…", "byteLength": 0 }`, with the actual length. |
 
 Store body bytes as base64 regardless of Content-Type. This preserves binary and invalid UTF-8 input without guessing or parsing user content. The base64 expansion is bounded by the raw body limit. Future reads must return captures as JSON, never executable HTML.
 
