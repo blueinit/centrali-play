@@ -13,6 +13,8 @@ The local Worker implements health checks and session creation. Capture, event r
 
 The [session contract](sessions.md) specifies the creation response, token format, fixed lifetime, and public URL configuration.
 
+The proposed [capture contract](capture.md) defines input limits, binary encoding, sensitive-header redaction, method handling, and atomic storage for the next implementation stage.
+
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
 | `POST /sessions`             | Return a session ID, capture URL, separate read token, and expiry. |
@@ -22,7 +24,7 @@ The [session contract](sessions.md) specifies the creation response, token forma
 
 `GET /health` and `POST /sessions` are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. Both operations disable caching. Other routes return JSON 404 responses. Hono also handles HEAD for GET routes, returning headers without a response body.
 
-Proposed limits: one-hour lifetime, latest 50 events, 64 KiB bodies. Header limits, rate limits, binary body encoding, and response limits remain open.
+Proposed limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract proposes header/query limits and base64 body encoding. Rate limits and read-response limits remain open.
 
 Capture tokens must not authorize reads. IDs are identifiers, not credentials. Tokens must be cryptographically random. Session creation and read responses must disable caching.
 
