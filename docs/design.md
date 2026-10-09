@@ -1,6 +1,6 @@
 # Design
 
-Only the local Worker skeleton and health endpoint are implemented. This document describes the intended capture architecture; API details and limits may change before the first release.
+The local Worker implements health checks and session creation. Capture, event reads, and abuse controls remain planned. API details and limits may change before the first release.
 
 ## Architecture
 
@@ -11,7 +11,7 @@ Only the local Worker skeleton and health endpoint are implemented. This documen
 
 ## Proposed API and defaults
 
-The [session contract](sessions.md) specifies the proposed creation response, token format, fixed lifetime, and public URL configuration. These details remain provisional until implementation.
+The [session contract](sessions.md) specifies the creation response, token format, fixed lifetime, and public URL configuration.
 
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
@@ -20,7 +20,7 @@ The [session contract](sessions.md) specifies the proposed creation response, to
 | `GET /sessions/:id/events`   | Read events with a bearer read token.                              |
 | `GET /health`                | Report application health without secrets.                         |
 
-Only `GET /health` is available today. It returns `{"status":"ok"}` with HTTP 200 and `Cache-Control: no-store`. It checks liveness only. Other routes return JSON 404 responses. Hono also handles HEAD for GET routes, returning headers without a response body.
+`GET /health` and `POST /sessions` are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. Both operations disable caching. Other routes return JSON 404 responses. Hono also handles HEAD for GET routes, returning headers without a response body.
 
 Proposed limits: one-hour lifetime, latest 50 events, 64 KiB bodies. Header limits, rate limits, binary body encoding, and response limits remain open.
 

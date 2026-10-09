@@ -1,6 +1,6 @@
 # Session contract
 
-This is a proposed contract for the next implementation milestone. Session creation, capture, and reads are not available yet.
+Session creation is implemented for local development. Capture and reads remain planned operations. Public deployment requires creation-rate limits and other abuse controls first.
 
 ## Create a session
 
@@ -83,7 +83,22 @@ Errors use JSON with a stable error code and `Cache-Control: no-store`. Response
 | 429    | `{"error":"rate_limited"}`        | The caller has exceeded creation limits. Include `Retry-After`.                   |
 | 503    | `{"error":"service_unavailable"}` | Storage is unavailable, quotas are exhausted, or configuration prevents creation. |
 
-The server must detect an unexpected body without buffering an unbounded request. Creation-rate thresholds and the precise quota-exhaustion behavior will be documented with abuse controls. Session creation must not be publicly deployed before those controls exist.
+The server detects an unexpected body without buffering an unbounded request. Creation-rate thresholds and the precise quota-exhaustion behavior will be documented with abuse controls. The 429 response is reserved for those controls and is not implemented yet. Backend failures, including backend quota errors, currently return 503. Session creation must not be publicly deployed before abuse controls exist.
+
+## Storage and configuration
+
+The current store creates two expiring string keys:
+
+- `play:session:<id>`: JSON containing the ID, token digests, and integer expiry in Unix seconds.
+- `play:capture:<capture-token-digest>`: the session ID, allowing future capture lookup without persisting raw tokens.
+
+The Lua script uses Redis server time for its deadline. It checks both keys before writing and attaches expiry to each write. A failed second write removes the first. Only confirmed collisions are retried, at most three attempts with fresh credentials.
+
+The HTTP transport sends commands in POST bodies with a bearer credential. It refuses redirects, times out after five seconds, bounds responses to 4 KiB, and does not automatically retry uncertain writes. Future event reads will need their own response-size policy.
+
+Required environment values are `PUBLIC_BASE_URL`, `UPSTASH_REDIS_REST_URL`, and `UPSTASH_REDIS_REST_TOKEN`. Both URLs must be origins satisfying the origin rules above. For hosted use, the Redis token must be a write-capable secret from the database provider. The checked-in `.dev.vars.example` uses a public development placeholder for the local bridge; it is not a hosted credential.
+
+Local Redis tests verify the script and HTTP flow. Upstash REST compatibility still requires a hosted smoke test before release; local testing does not verify provider-specific quotas or billing. Redis Cluster support is not verified.
 
 ## Verification requirements
 

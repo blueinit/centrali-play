@@ -12,7 +12,7 @@ Read the [design](docs/design.md) and [roadmap](docs/roadmap.md) first. Discuss 
 
 ## Development commands
 
-Install Node.js 24 or newer and run `npm ci`. CI uses Node.js 24. The lockfile pins dependency versions; use `npm ci` for reproducible installs.
+Install Node.js 24.2 or newer and run `npm ci`. CI uses Node.js 24. The lockfile pins dependency versions; use `npm ci` for reproducible installs. Start dedicated Redis with `docker compose up -d --wait` before running tests. See the README for the full local development setup.
 
 | Command                | Purpose                                                  |
 | ---------------------- | -------------------------------------------------------- |
@@ -25,12 +25,20 @@ Install Node.js 24 or newer and run `npm ci`. CI uses Node.js 24. The lockfile p
 | `npm run format:check` | Check formatting without changing files.                 |
 | `npm run build`        | Bundle into dist using Wrangler dry-run; no deployment.  |
 
-The current skeleton needs no account, secrets, or database. Tests load the same Wrangler configuration as local development. Build output, local runtime state, and generated Worker types are ignored by Git. Run `npm run typegen` after changing Worker bindings or when setting up editor types; `npm run typecheck` does this automatically.
+Local development needs no hosted account or credentials. Tests use a dedicated Redis instance at `redis://127.0.0.1:6380` and start their own loopback HTTP bridge. To use a different local test port, set `REDIS_TEST_URL`; only loopback Redis is permitted. Never use a shared or production database. Tests delete only their own generated keys and never flush the database.
+
+Worker tests load the Wrangler configuration with test bindings. Build output, local runtime state, credentials, and generated Worker types are ignored by Git. Run `npm run typegen` after changing Worker bindings or when setting up editor types; `npm run typecheck` does this automatically.
 
 ## Repository structure
 
 - `src/index.ts`: Hono app and Worker entry point.
+- `src/sessions.ts`: session creation handler and token generation.
+- `src/session-store.ts`: atomic Redis creation script and key layout.
+- `src/redis.ts`: bounded HTTP transport with a timeout and no automatic write retries.
+- `src/config.ts`: environment and origin validation.
 - `test/worker.test.ts`: HTTP contract tests in the Worker runtime.
+- `test/sessions.test.ts` and `test/session-store.test.ts`: session behavior, storage, concurrency, and expiry tests.
+- `scripts/redis-http.ts`: development/test bridge to a dedicated local Redis instance.
 - `wrangler.jsonc`: runtime entry point and compatibility settings.
 - `vitest.config.ts` and `tsconfig.json`: test and type-check configuration.
 - `.github/workflows/ci.yml`: read-only CI checks; no deployment secrets.
