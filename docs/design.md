@@ -11,6 +11,8 @@ Only the local Worker skeleton and health endpoint are implemented. This documen
 
 ## Proposed API and defaults
 
+The [session contract](sessions.md) specifies the proposed creation response, token format, fixed lifetime, and public URL configuration. These details remain provisional until implementation.
+
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
 | `POST /sessions`             | Return a session ID, capture URL, separate read token, and expiry. |
