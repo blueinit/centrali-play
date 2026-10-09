@@ -1,7 +1,7 @@
 import type { IncomingMessage, ServerResponse } from 'node:http'
 
 export const LOCAL_REDIS_TOKEN = 'local-development-only'
-const MAX_COMMAND_BYTES = 32_768
+const MAX_COMMAND_BYTES = 262_144
 
 type CommandResult =
   | { command: string[] }
