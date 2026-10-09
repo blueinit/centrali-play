@@ -1,4 +1,6 @@
 export type Bindings = {
+  DISABLE_SESSION_CREATION?: string
+  DISABLE_STORAGE_ROUTES?: string
   PUBLIC_BASE_URL?: string
   UPSTASH_REDIS_REST_URL?: string
   UPSTASH_REDIS_REST_TOKEN?: string

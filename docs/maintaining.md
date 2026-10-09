@@ -16,7 +16,7 @@ Private vulnerability reporting and dependency alerts are enabled. Dependabot ch
 
 No release or deployment exists. Before `v0.1.0`, verify clean-checkout setup, expiry/concurrency, authorization, limits, backend failures, safe logs, and realistic polling costs. Finalize API documentation and supported versions.
 
-For routine PRs, run `npm ci`, `docker compose up -d --wait`, and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. The current Worker supports bounded capture and authorized reads but has no abuse controls and is intended for local development only; public Worker and preview URLs are disabled in configuration.
+For routine PRs, run `npm ci`, `docker compose up -d --wait`, and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. The current Worker supports bounded capture, authorized reads, and operator shutdown switches, but admission limits remain unimplemented. It is intended for local development only; public Worker and preview URLs are disabled in configuration.
 
 Use semantic version tags and release notes explaining behavior, compatibility, and known limitations. Announce breaking API changes explicitly, including before 1.0.
 
@@ -30,7 +30,15 @@ Before launch, document exact provisioning, deploy, disable, rollback, and quota
 
 ## Incidents
 
-For abuse or quota exhaustion, disable creation or the deployment as needed to protect data and resource limits.
+### Storage shutdown switches
+
+Set `DISABLE_SESSION_CREATION=true` to pause new sessions while existing sessions can still capture and read. Set `DISABLE_STORAGE_ROUTES=true` to stop creation, capture, and reads. These are operator environment bindings; callers cannot select them through headers or query parameters. Local development can set them in `.dev.vars` and restart the Worker. Hosted update commands must be verified in the launch runbook before deployment.
+
+Both switches accept only the strings `true` and `false`. An omitted switch defaults to `false` for the current local-development stage. Any other value fails closed on all storage routes. These switches do not enable public deployment or replace the protected profile and admission controls still required before launch.
+
+Shutdown takes precedence over route input validation. A stopped route returns a safe 503, `Cache-Control: no-store`, and `Retry-After: 60` before reading a body or contacting Redis. HEAD responses are bodyless. Health checks and unknown routes retain their usual behavior. Shutdown does not delete sessions or extend their expiry; requests already in flight may finish, and clients may retry after recovery.
+
+For abuse or quota exhaustion, disable storage routes or the deployment as needed to protect resource limits. Changing environment bindings takes effect when the updated Worker configuration becomes active; this is not an instantaneous cancellation mechanism. Restore switches to `false` only after investigating and verifying recovery.
 
 For leaked credentials, revoke and rotate first, then investigate privately. Deleting a secret from a commit does not revoke it or erase history.
 

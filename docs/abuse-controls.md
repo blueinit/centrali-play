@@ -1,6 +1,6 @@
 # Abuse-control contract
 
-This proposes the next implementation stage. These controls are not implemented yet. Public deployment requires this stage, hosted compatibility tests, quota measurements, and a reviewed release workflow.
+This defines the abuse-control implementation stage. Operator shutdown switches are implemented locally; the admission limits, identity policy, and workload budgets below remain proposed. Public deployment requires the complete stage, hosted compatibility tests, quota measurements, and a reviewed release workflow.
 
 ## Two layers of admission
 
