@@ -17,7 +17,7 @@ The [capture contract](capture.md) defines implemented input limits, binary enco
 
 The [event-read contract](reads.md) defines bearer authorization, exclusive cursors, retention warnings, bounded pages, and polling backoff.
 
-The proposed [abuse-control contract](abuse-controls.md) defines edge guards, strict global/session admission, workload and transfer budgets, client identity, privacy, and shutdown controls.
+The [abuse-control contract](abuse-controls.md) defines implemented operator shutdown switches and proposed edge guards, strict global/session admission, workload and transfer budgets, client identity, and privacy rules.
 
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |

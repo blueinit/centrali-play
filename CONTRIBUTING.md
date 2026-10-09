@@ -32,6 +32,7 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 ## Repository structure
 
 - `src/index.ts`: Hono app and Worker entry point.
+- `src/storage-controls.ts`: operator shutdown switches before body or storage work.
 - `src/sessions.ts`: HTTP validation and session creation responses.
 - `src/session-service.ts`: credential creation and bounded collision retries.
 - `src/tokens.ts`: random credentials and token digests.
