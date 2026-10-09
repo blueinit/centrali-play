@@ -15,6 +15,8 @@ The [session contract](sessions.md) specifies the creation response, token forma
 
 The [capture contract](capture.md) defines implemented input limits, binary encoding, sensitive-header redaction, method handling, and atomic storage.
 
+The proposed [event-read contract](reads.md) defines bearer authorization, exclusive cursors, retention warnings, bounded pages, and polling backoff for the next implementation stage.
+
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
 | `POST /sessions`             | Return a session ID, capture URL, separate read token, and expiry. |
@@ -24,7 +26,7 @@ The [capture contract](capture.md) defines implemented input limits, binary enco
 
 Health, session creation, and capture are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. All three operations disable caching. Unknown routes return JSON 404 responses. Capture supports GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS; unsupported capture methods return 405. HEAD returns headers without a response body.
 
-Implemented limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract specifies header/query limits and base64 body encoding. Rate limits and read-response limits remain open.
+Implemented limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract specifies header/query limits and base64 body encoding. The read contract proposes pages of up to 10 events and 256 KiB. Rate limits remain open.
 
 Capture tokens must not authorize reads. IDs are identifiers, not credentials. Tokens must be cryptographically random. Session creation and read responses must disable caching.
 

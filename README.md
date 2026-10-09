@@ -77,6 +77,7 @@ Individual commands and repository structure are documented in [Contributing](CO
 - [Design](docs/design.md): architecture, proposed API, and open decisions.
 - [Session contract](docs/sessions.md): creation response, credentials, expiry, and configuration.
 - [Capture contract](docs/capture.md): methods, limits, redaction, binary encoding, and storage.
+- [Proposed event-read contract](docs/reads.md): authorization, cursor pagination, response bounds, and polling.
 - [Roadmap](docs/roadmap.md): planned capabilities and release readiness.
 - [Contributing](CONTRIBUTING.md): changes, code expectations, and review.
 - [Maintaining](docs/maintaining.md): ownership, releases, deployment, and incidents.
