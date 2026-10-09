@@ -17,6 +17,8 @@ The [capture contract](capture.md) defines implemented input limits, binary enco
 
 The [event-read contract](reads.md) defines bearer authorization, exclusive cursors, retention warnings, bounded pages, and polling backoff.
 
+The proposed [abuse-control contract](abuse-controls.md) defines edge guards, strict global/session admission, workload and transfer budgets, client identity, privacy, and shutdown controls.
+
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
 | `POST /sessions`             | Return a session ID, capture URL, separate read token, and expiry. |
@@ -45,7 +47,7 @@ Keep ordinary Redis operations behind a small adapter. Upstash HTTP is the first
 
 Limit creation, capture, and reads. Reject malformed tokens and oversized input before unnecessary database work. Enforce streamed body size, not only Content-Length.
 
-Cloudflare-native rate limits are approximate and local to an edge location. Use them as an outer guard; enforce strict session storage invariants in Redis. Exact rate enforcement and quota protection remain to be specified.
+Cloudflare-native rate limits are approximate and local to an edge location. The abuse-control proposal combines them with strict Redis admission and session counters. Application workload allowances are distinct from provider billing limits.
 
 Define trusted proxy IP handling for each deployment; never trust arbitrary caller forwarding headers. CORS is not authentication. Return captures as JSON with explicit body encoding, never executable HTML. Capture redacts common credential headers as specified in its contract.
 
