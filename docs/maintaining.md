@@ -16,7 +16,7 @@ Private vulnerability reporting and dependency alerts are enabled. Dependabot ch
 
 No release or deployment exists. Before `v0.1.0`, verify clean-checkout setup, expiry/concurrency, authorization, limits, backend failures, safe logs, and realistic polling costs. Finalize API documentation and supported versions.
 
-For routine PRs, run `npm ci`, `docker compose up -d --wait`, and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. The current Worker supports bounded capture but has no event-read API or abuse controls and is intended for local development only; public Worker and preview URLs are disabled in configuration.
+For routine PRs, run `npm ci`, `docker compose up -d --wait`, and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. The current Worker supports bounded capture and authorized reads but has no abuse controls and is intended for local development only; public Worker and preview URLs are disabled in configuration.
 
 Use semantic version tags and release notes explaining behavior, compatibility, and known limitations. Announce breaking API changes explicitly, including before 1.0.
 

@@ -1,6 +1,6 @@
 # Session contract
 
-Session creation and [capture](capture.md) are implemented for local development. Reads remain planned. Public deployment requires creation-rate limits and other abuse controls first.
+Session creation, [capture](capture.md), and [event reads](reads.md) are implemented for local development. Public deployment requires creation-rate limits and other abuse controls first.
 
 ## Create a session
 
@@ -38,7 +38,7 @@ A capture token never authorizes event reads. A read token never authorizes writ
 
 Clients can give the capture URL to a webhook sender while keeping the read token private. Anyone who obtains the read token and session ID can read the session until expiry. Anyone who obtains the capture URL can inject events until expiry, subject to limits.
 
-The planned read request is:
+The read request is:
 
 ```sh
 curl https://play.example/sessions/<session-id>/events \
@@ -59,7 +59,7 @@ Hashes do not make capture URLs safe to disclose. Platform access logs, client l
 
 ## Expiry and atomic creation
 
-The initial lifetime is 3,600 seconds. The storage operation establishes one absolute deadline. Metadata, the capture-token lookup, and future capture storage must all expire at that deadline. Creating no events must not leave a permanent lookup key.
+The initial lifetime is 3,600 seconds. The storage operation establishes one absolute deadline. Metadata, the capture-token lookup, and capture storage all expire at that deadline. Creating no events must not leave a permanent lookup key.
 
 All creation writes must succeed atomically. A collision must never overwrite an existing session; generate fresh values and retry only a bounded number of times. Activity and reads never move the deadline. Later capture operations must atomically check the session's deadline before writing so an expired session cannot be recreated by a racing request.
 
@@ -94,7 +94,7 @@ The current store creates two expiring string keys:
 
 The Lua script uses Redis server time for its deadline. It checks both keys before writing and attaches expiry to each write. A failed second write removes the first. Only confirmed collisions are retried, at most three attempts with fresh credentials.
 
-The HTTP transport sends commands in POST bodies with a bearer credential. It refuses redirects, times out after five seconds, bounds responses to 4 KiB, and does not automatically retry uncertain writes. Future event reads will need their own response-size policy.
+The HTTP transport sends commands in POST bodies with a bearer credential. It refuses redirects, times out after five seconds, bounds creation/capture responses to 4 KiB, and does not automatically retry uncertain writes. Event reads have a separate 256 KiB reply policy, as described in the read contract.
 
 Required environment values are `PUBLIC_BASE_URL`, `UPSTASH_REDIS_REST_URL`, and `UPSTASH_REDIS_REST_TOKEN`. Both URLs must be origins satisfying the origin rules above. For hosted use, the Redis token must be a write-capable secret from the database provider. The checked-in `.dev.vars.example` uses a public development placeholder for the local bridge; it is not a hosted credential.
 
@@ -111,4 +111,4 @@ Local Redis tests verify the script and HTTP flow. Upstash REST compatibility st
 - Backend failures do not return successful-looking credentials.
 - Real Redis tests verify atomic writes and expiry; mocked responses alone are insufficient.
 
-Capture writes have their own behavior and real Redis tests. Read authorization, cursor semantics, and abuse limits need their own behavior tests when those operations are implemented.
+Capture writes and event reads have their own behavior and real Redis tests. Abuse limits need their own behavior tests when implemented.

@@ -3,6 +3,15 @@ export const MAX_HEADER_BYTES = 16_384
 export const MAX_HEADERS = 64
 export const MAX_QUERY_BYTES = 4_096
 const BODY_TIMEOUT_MS = 5_000
+export const CAPTURE_METHODS: readonly string[] = [
+  'GET',
+  'POST',
+  'PUT',
+  'PATCH',
+  'DELETE',
+  'HEAD',
+  'OPTIONS',
+]
 const REDACTED_HEADERS = new Set([
   'authorization',
   'proxy-authorization',
@@ -29,6 +38,10 @@ export type CaptureInput = {
 
 type CaptureMetadata = Omit<CaptureInput, 'body'>
 
+export function isSensitiveHeader(name: string): boolean {
+  return REDACTED_HEADERS.has(name.toLowerCase())
+}
+
 function byteLength(value: string): number {
   return new TextEncoder().encode(value).byteLength
 }
@@ -42,7 +55,7 @@ export function captureHeaders(headers: Headers): [string, string][] {
   if (entries.length > MAX_HEADERS || bytes > MAX_HEADER_BYTES) {
     throw new CaptureInputError(413, 'payload_too_large')
   }
-  return entries.filter(([name]) => !REDACTED_HEADERS.has(name.toLowerCase()))
+  return entries.filter(([name]) => !isSensitiveHeader(name))
 }
 
 export function captureQuery(url: string): string {

@@ -46,7 +46,16 @@ export async function redisCommand(
   config: RedisConfig,
   command: (string | number)[],
 ): Promise<unknown> {
+  return boundedRedisCommand(config, command, MAX_REDIS_RESPONSE_BYTES)
+}
+
+// Read pages use an explicit policy without widening write-response limits.
+export async function boundedRedisCommand(
+  config: RedisConfig,
+  command: (string | number)[],
+  maxResponseBytes: number,
+): Promise<unknown> {
   const response = await sendRedisCommand(config, command)
-  const text = await readLimitedText(response.body, MAX_REDIS_RESPONSE_BYTES)
+  const text = await readLimitedText(response.body, maxResponseBytes)
   return parseRedisReply(text)
 }

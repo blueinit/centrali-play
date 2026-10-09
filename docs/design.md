@@ -1,6 +1,6 @@
 # Design
 
-The local Worker implements health checks, session creation, and bounded capture. Event reads and abuse controls remain planned. API details and limits may change before the first release.
+The local Worker implements health checks, session creation, bounded capture, and authorized event reads. Abuse controls remain planned. API details and limits may change before the first release.
 
 ## Architecture
 
@@ -15,7 +15,7 @@ The [session contract](sessions.md) specifies the creation response, token forma
 
 The [capture contract](capture.md) defines implemented input limits, binary encoding, sensitive-header redaction, method handling, and atomic storage.
 
-The proposed [event-read contract](reads.md) defines bearer authorization, exclusive cursors, retention warnings, bounded pages, and polling backoff for the next implementation stage.
+The [event-read contract](reads.md) defines bearer authorization, exclusive cursors, retention warnings, bounded pages, and polling backoff.
 
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
@@ -24,13 +24,13 @@ The proposed [event-read contract](reads.md) defines bearer authorization, exclu
 | `GET /sessions/:id/events`   | Read events with a bearer read token.                              |
 | `GET /health`                | Report application health without secrets.                         |
 
-Health, session creation, and capture are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. All three operations disable caching. Unknown routes return JSON 404 responses. Capture supports GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS; unsupported capture methods return 405. HEAD returns headers without a response body.
+Health, session creation, capture, and event reads are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. All operations disable caching. Unknown routes return JSON 404 responses. Capture supports GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS; reads support GET and HEAD. Unsupported capture/read methods return 405. HEAD returns headers without a response body.
 
-Implemented limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract specifies header/query limits and base64 body encoding. The read contract proposes pages of up to 10 events and 256 KiB. Rate limits remain open.
+Implemented limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract specifies header/query limits and base64 body encoding. Read pages contain up to 10 events and 256 KiB. Rate limits remain open.
 
 Capture tokens must not authorize reads. IDs are identifiers, not credentials. Tokens must be cryptographically random. Session creation and read responses must disable caching.
 
-Cursor reads should return only new events. Specify behavior when old events are trimmed, polling backoff, and a stop condition. Define HEAD, OPTIONS, and CORS preflight behavior explicitly.
+Cursor reads return only events newer than the supplied cursor. The read contract defines trimming warnings, polling backoff, expiry stop conditions, and HEAD/OPTIONS behavior. No CORS allow headers are added yet.
 
 ## Redis invariants
 

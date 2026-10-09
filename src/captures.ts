@@ -5,19 +5,10 @@ import {
   captureInput,
   captureMetadata,
   CaptureInputError,
+  CAPTURE_METHODS,
 } from './capture-input'
 import { appendCapture, findCaptureSession } from './capture-store'
 import { tokenDigest } from './tokens'
-
-const CAPTURE_METHODS = [
-  'GET',
-  'POST',
-  'PUT',
-  'PATCH',
-  'DELETE',
-  'HEAD',
-  'OPTIONS',
-]
 
 function failure(
   c: Context,
