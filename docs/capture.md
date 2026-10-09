@@ -1,6 +1,6 @@
 # Capture contract
 
-This document proposes the next implementation stage. Capture is not implemented yet. Public deployment also requires the abuse controls described in the [design](design.md).
+Capture is implemented for local development. Event reads remain unimplemented. Public deployment also requires the abuse controls described in the [design](design.md).
 
 ## Request and response
 
@@ -39,7 +39,7 @@ Count all headers toward limits before redaction. Capture the headers exposed by
 
 ## Stored event
 
-Each accepted request stores a versioned JSON event with these fields:
+Each accepted request stores a versioned JSON payload in the stream's `event` field and a Redis timestamp in its `receivedAt` field. Keeping the original JSON avoids changing empty arrays during Lua encoding. The future read API will combine those fields with the stream ID into this event shape:
 
 | Field        | Representation                                                                     |
 | ------------ | ---------------------------------------------------------------------------------- |
@@ -62,6 +62,12 @@ Use `play:events:<session-id>` as the Redis stream key. In one bounded Lua opera
 An expired or missing session must never create or recreate an event stream. Every accepted event shares the session deadline; writes never extend retention. A session with no captures needs no event key. Keep the existing session creation key layout unchanged.
 
 Redis script execution prevents interleaving but does not roll back commands after an error. Arrange validation before mutation, attach expiry during the append operation's guarded sequence, and test failure handling so a partial write cannot leave permanent data. Only return success after the complete script succeeds. Do not automatically retry uncertain writes: a retry can create a duplicate. Sender retries are separate captures; this endpoint makes no exactly-once guarantee.
+
+The implementation uses exact [XADD trimming](https://redis.io/docs/latest/commands/xadd/) and [EXPIREAT](https://redis.io/docs/latest/commands/expireat/) in the same script. If expiry attachment fails, the script deletes the event stream and returns an error. This deliberately discards the session's captures rather than retain data without a deadline. Operators must grant all required script commands, including cleanup with `DEL`; provider permissions and compatibility must be checked before launch.
+
+A successful capture uses three Redis HTTP calls: capture lookup, live-session validation, and the final atomic append. The body is consumed only after the live-session check. Header and query bounds are checked before database access. Redis reply limits remain 4 KiB because capture returns only an ID internally, not the captured payload.
+
+The local development bridge permits commands up to 256 KiB to accommodate a bounded base64 body, headers, and the script. It remains loopback-only development tooling.
 
 ## Implementation and verification
 

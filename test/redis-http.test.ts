@@ -20,7 +20,7 @@ describe('local Redis bridge', () => {
 
   it('returns a usable 413 response for oversized commands', async () => {
     const response = await bridgeRequest(
-      JSON.stringify(['PING', 'x'.repeat(32_768)]),
+      JSON.stringify(['PING', 'x'.repeat(262_144)]),
     )
     expect(response.status).toBe(413)
     expect(await response.json()).toEqual({ error: 'too_large' })

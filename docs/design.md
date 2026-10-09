@@ -1,6 +1,6 @@
 # Design
 
-The local Worker implements health checks and session creation. Capture, event reads, and abuse controls remain planned. API details and limits may change before the first release.
+The local Worker implements health checks, session creation, and bounded capture. Event reads and abuse controls remain planned. API details and limits may change before the first release.
 
 ## Architecture
 
@@ -13,7 +13,7 @@ The local Worker implements health checks and session creation. Capture, event r
 
 The [session contract](sessions.md) specifies the creation response, token format, fixed lifetime, and public URL configuration.
 
-The proposed [capture contract](capture.md) defines input limits, binary encoding, sensitive-header redaction, method handling, and atomic storage for the next implementation stage.
+The [capture contract](capture.md) defines implemented input limits, binary encoding, sensitive-header redaction, method handling, and atomic storage.
 
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
@@ -22,9 +22,9 @@ The proposed [capture contract](capture.md) defines input limits, binary encodin
 | `GET /sessions/:id/events`   | Read events with a bearer read token.                              |
 | `GET /health`                | Report application health without secrets.                         |
 
-`GET /health` and `POST /sessions` are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. Both operations disable caching. Other routes return JSON 404 responses. Hono also handles HEAD for GET routes, returning headers without a response body.
+Health, session creation, and capture are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. All three operations disable caching. Unknown routes return JSON 404 responses. Capture supports GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS; unsupported capture methods return 405. HEAD returns headers without a response body.
 
-Proposed limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract proposes header/query limits and base64 body encoding. Rate limits and read-response limits remain open.
+Implemented limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract specifies header/query limits and base64 body encoding. Rate limits and read-response limits remain open.
 
 Capture tokens must not authorize reads. IDs are identifiers, not credentials. Tokens must be cryptographically random. Session creation and read responses must disable caching.
 
@@ -45,7 +45,7 @@ Limit creation, capture, and reads. Reject malformed tokens and oversized input 
 
 Cloudflare-native rate limits are approximate and local to an edge location. Use them as an outer guard; enforce strict session storage invariants in Redis. Exact rate enforcement and quota protection remain to be specified.
 
-Define trusted proxy IP handling for each deployment; never trust arbitrary caller forwarding headers. CORS is not authentication. Return captures as JSON with explicit body encoding, never executable HTML. Decide sensitive-header redaction before capture implementation.
+Define trusted proxy IP handling for each deployment; never trust arbitrary caller forwarding headers. CORS is not authentication. Return captures as JSON with explicit body encoding, never executable HTML. Capture redacts common credential headers as specified in its contract.
 
 Measure Redis commands and bandwidth for a full session including empty polling. Free quotas mean bounded availability, not unlimited scale. Operators should budget for storage and bandwidth as well as commands, and configure spending limits where supported.
 

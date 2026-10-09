@@ -2,7 +2,7 @@
 
 A small, disposable webhook capture API. Create a temporary session, send HTTP requests to its capture URL, and retrieve the captured requests as JSON.
 
-**Early development:** health checks and session creation work locally. Capture and event reads are not implemented. No hosted service is available; public deployment awaits abuse controls.
+**Early development:** health checks, session creation, and bounded capture work locally. Event reads are not implemented. No hosted service is available; public deployment awaits abuse controls.
 
 ## Purpose
 
@@ -45,7 +45,17 @@ curl -i http://127.0.0.1:8787/health
 curl -i -X POST http://127.0.0.1:8787/sessions
 ```
 
-`GET /health` returns HTTP 200 with `{"status":"ok"}`. This is a liveness check, not a database readiness check. `POST /sessions` returns HTTP 201 with an ID, capture URL, read token, and fixed expiry, as described in the [session contract](docs/sessions.md). Both responses disable caching. Capture URLs cannot accept events yet. Unknown routes and unsupported methods return JSON 404 responses.
+`GET /health` returns HTTP 200 with `{"status":"ok"}`. This is a liveness check, not a database readiness check. `POST /sessions` returns HTTP 201 with an ID, capture URL, read token, and fixed expiry, as described in the [session contract](docs/sessions.md). Both responses disable caching.
+
+Copy the returned capture URL into this command using synthetic data:
+
+```sh
+curl -i -X POST '<captureUrl>' \
+  -H 'Content-Type: application/json' \
+  --data '{"example":"hello"}'
+```
+
+A successful capture returns 204 after storage confirms the write. Bodies are limited to 64 KiB, common credential headers are redacted, and the latest 50 events share the session deadline. See the [capture contract](docs/capture.md) for all limits and methods. Reading events through the API is not implemented yet. Unknown routes return JSON 404 responses; unsupported capture methods return 405.
 
 Stop the Worker and bridge with Ctrl+C, then run `docker compose down`. Development Redis has no persistent volume; removing its container discards its data.
 
@@ -66,6 +76,7 @@ Individual commands and repository structure are documented in [Contributing](CO
 
 - [Design](docs/design.md): architecture, proposed API, and open decisions.
 - [Session contract](docs/sessions.md): creation response, credentials, expiry, and configuration.
+- [Capture contract](docs/capture.md): methods, limits, redaction, binary encoding, and storage.
 - [Roadmap](docs/roadmap.md): planned capabilities and release readiness.
 - [Contributing](CONTRIBUTING.md): changes, code expectations, and review.
 - [Maintaining](docs/maintaining.md): ownership, releases, deployment, and incidents.

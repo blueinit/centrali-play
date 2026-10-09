@@ -1,6 +1,6 @@
 # Session contract
 
-Session creation is implemented for local development. Capture and reads remain planned operations. Public deployment requires creation-rate limits and other abuse controls first.
+Session creation and [capture](capture.md) are implemented for local development. Reads remain planned. Public deployment requires creation-rate limits and other abuse controls first.
 
 ## Create a session
 
@@ -90,7 +90,7 @@ The server detects an unexpected body without buffering an unbounded request. Cr
 The current store creates two expiring string keys:
 
 - `play:session:<id>`: JSON containing the ID, token digests, and integer expiry in Unix seconds.
-- `play:capture:<capture-token-digest>`: the session ID, allowing future capture lookup without persisting raw tokens.
+- `play:capture:<capture-token-digest>`: the session ID, allowing capture lookup without persisting raw tokens.
 
 The Lua script uses Redis server time for its deadline. It checks both keys before writing and attaches expiry to each write. A failed second write removes the first. Only confirmed collisions are retried, at most three attempts with fresh credentials.
 
@@ -111,4 +111,4 @@ Local Redis tests verify the script and HTTP flow. Upstash REST compatibility st
 - Backend failures do not return successful-looking credentials.
 - Real Redis tests verify atomic writes and expiry; mocked responses alone are insufficient.
 
-Read authorization, capture writes, cursor semantics, and abuse limits need their own behavior tests when those operations are implemented.
+Capture writes have their own behavior and real Redis tests. Read authorization, cursor semantics, and abuse limits need their own behavior tests when those operations are implemented.
