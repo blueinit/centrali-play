@@ -13,7 +13,6 @@ describe('Worker HTTP contract', () => {
 
   it.each([
     ['GET', '/unknown'],
-    ['POST', '/sessions'],
     ['POST', '/capture/example'],
     ['GET', '/sessions/example/events'],
     ['POST', '/health'],
