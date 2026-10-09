@@ -6,7 +6,7 @@ Initial maintainer: [@buildwithmary](https://github.com/buildwithmary). CODEOWNE
 
 All changes use PRs. Keep changes focused and reviewable. Squash merges are enabled; merged branches are automatically deleted. Review all code for correctness, maintainability, and security regardless of how it was authored.
 
-Main protection requires PRs, blocks deletion and force pushes, and applies to administrators. Required approving reviews are currently zero because there is one maintainer; human approval is an explicit workflow requirement rather than a GitHub-enforced review count. CODEOWNERS requests review but does not enforce it. Require approving reviews when another maintainer joins. The CI job is named `Check`; require it on main after its first successful run.
+Main protection requires PRs and the `Check` CI job on an up-to-date branch, blocks deletion and force pushes, and applies to administrators. Required approving reviews are currently zero because there is one maintainer; human approval is an explicit workflow requirement rather than a GitHub-enforced review count. CODEOWNERS requests review but does not enforce it. Require approving reviews when another maintainer joins.
 
 GitHub does not allow authors to approve their own PRs. Maintainer-authored PRs need another reviewer or documented self-review where only one maintainer is available.
 
