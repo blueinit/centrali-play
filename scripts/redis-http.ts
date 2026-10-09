@@ -1,13 +1,10 @@
 // Development/test bridge only: never expose it or point it at application data.
 import { createServer } from 'node:http'
+import type { Server } from 'node:http'
 import { createClient } from 'redis'
+import { handleRedisRequest } from './redis-http-handler.ts'
 
-export const LOCAL_REDIS_TOKEN = 'local-development-only'
-
-export async function startRedisHttp(
-  redisUrl = 'redis://127.0.0.1:6380',
-  port = 0,
-) {
+async function connectRedis(redisUrl: string) {
   const target = new URL(redisUrl)
   if (
     target.protocol !== 'redis:' ||
@@ -22,79 +19,56 @@ export async function startRedisHttp(
   })
   // Errors are handled through command promises; never print Redis credentials.
   client.on('error', () => {})
-  await client.connect()
-
-  const server = createServer(async (request, response) => {
-    response.setHeader('Content-Type', 'application/json')
-    response.setHeader('Cache-Control', 'no-store')
-    if (
-      request.method !== 'POST' ||
-      request.url !== '/' ||
-      request.headers.origin
-    ) {
-      response.writeHead(400).end(JSON.stringify({ error: 'invalid_request' }))
-      return
-    }
-    if (request.headers.authorization !== `Bearer ${LOCAL_REDIS_TOKEN}`) {
-      response.writeHead(401).end(JSON.stringify({ error: 'unauthorized' }))
-      return
-    }
-
-    try {
-      const chunks: Buffer[] = []
-      let size = 0
-      for await (const chunk of request) {
-        size += chunk.length
-        if (size > 32_768) {
-          response.writeHead(413).end(JSON.stringify({ error: 'too_large' }))
-          return
-        }
-        chunks.push(chunk)
-      }
-      const command: unknown = JSON.parse(
-        Buffer.concat(chunks).toString('utf8'),
-      )
-      if (
-        !Array.isArray(command) ||
-        command.length === 0 ||
-        !command.every(
-          (value) => typeof value === 'string' || typeof value === 'number',
-        )
-      ) {
-        response
-          .writeHead(400)
-          .end(JSON.stringify({ error: 'invalid_request' }))
-        return
-      }
-      const result = await client.sendCommand(command.map(String))
-      response.end(JSON.stringify({ result }))
-    } catch {
-      response.writeHead(503).end(JSON.stringify({ error: 'redis_error' }))
-    }
-  })
-
   try {
-    await new Promise<void>((resolve, reject) => {
-      server.once('error', reject)
-      server.listen(port, '127.0.0.1', resolve)
-    })
+    await client.connect()
+    return client
   } catch (error) {
     client.destroy()
     throw error
   }
+}
+
+async function listen(server: Server, port: number): Promise<number> {
+  await new Promise<void>((resolve, reject) => {
+    server.once('error', reject)
+    server.listen(port, '127.0.0.1', resolve)
+  })
   const address = server.address()
   if (!address || typeof address === 'string')
     throw new Error('No local address')
+  return address.port
+}
 
-  return {
-    port: address.port,
-    async close() {
-      await new Promise<void>((resolve) => {
-        server.close(() => resolve())
-        server.closeAllConnections()
-      })
-      client.destroy()
-    },
+async function closeServer(server: Server) {
+  await new Promise<void>((resolve) => {
+    server.close(() => resolve())
+    server.closeAllConnections()
+  })
+}
+
+export async function startRedisHttp(
+  redisUrl = 'redis://127.0.0.1:6380',
+  port = 0,
+) {
+  const client = await connectRedis(redisUrl)
+  const server = createServer(
+    (request, response) =>
+      void handleRedisRequest(request, response, (command) =>
+        client.sendCommand(command),
+      ),
+  )
+  try {
+    const actualPort = await listen(server, port)
+    return {
+      port: actualPort,
+      async close() {
+        await closeServer(server)
+        client.destroy()
+      },
+    }
+  } catch (error) {
+    client.destroy()
+    throw error
   }
 }
 

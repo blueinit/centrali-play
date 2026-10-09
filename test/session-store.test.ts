@@ -13,7 +13,14 @@ function command(lifetime = 3_600) {
   const captureHash = crypto.randomUUID()
   const readHash = crypto.randomUUID()
   keys.push(...sessionKeys(id, captureHash))
-  return createSessionCommand(id, captureHash, readHash, lifetime)
+  return createSessionCommand(
+    {
+      id,
+      captureTokenHash: captureHash,
+      readTokenHash: readHash,
+    },
+    lifetime,
+  )
 }
 
 afterEach(async () => {

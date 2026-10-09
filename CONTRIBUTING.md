@@ -32,13 +32,17 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 ## Repository structure
 
 - `src/index.ts`: Hono app and Worker entry point.
-- `src/sessions.ts`: session creation handler and token generation.
+- `src/sessions.ts`: HTTP validation and session creation responses.
+- `src/session-service.ts`: credential creation and bounded collision retries.
+- `src/tokens.ts`: random credentials and token digests.
+- `src/body.ts`: bounded stream reading and request-body detection.
 - `src/session-store.ts`: atomic Redis creation script and key layout.
 - `src/redis.ts`: bounded HTTP transport with a timeout and no automatic write retries.
 - `src/config.ts`: environment and origin validation.
 - `test/worker.test.ts`: HTTP contract tests in the Worker runtime.
 - `test/sessions.test.ts` and `test/session-store.test.ts`: session behavior, storage, concurrency, and expiry tests.
 - `scripts/redis-http.ts`: development/test bridge to a dedicated local Redis instance.
+- `scripts/redis-http-handler.ts`: local bridge authentication and command validation.
 - `wrangler.jsonc`: runtime entry point and compatibility settings.
 - `vitest.config.ts` and `tsconfig.json`: test and type-check configuration.
 - `.github/workflows/ci.yml`: read-only CI checks; no deployment secrets.
@@ -49,6 +53,8 @@ Keep the structure small; add files when a distinct responsibility needs them. D
 ## Code expectations
 
 Use small named functions, explicit types, and straightforward control flow. Keep HTTP handling, security checks, and Redis operations easy to locate. Avoid dependencies and generic abstractions without a concrete need.
+
+Give each function one responsibility. When a function mixes validation, storage, and response construction, extract those steps into named functions. Prefer named constants for limits and object arguments for related values. Keep helpers close to their callers; create a module when it owns a distinct responsibility. Readability matters more than an arbitrary line limit.
 
 Explain security-sensitive invariants in comments. Test behavior that matters: expiry, concurrent writes, authorization, limits, and failures. Never commit credentials or enable logging of captured payloads.
 

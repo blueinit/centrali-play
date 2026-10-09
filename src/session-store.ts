@@ -3,6 +3,12 @@ import { redisCommand } from './redis'
 
 export const SESSION_LIFETIME_SECONDS = 3_600
 
+type SessionRecord = {
+  id: string
+  captureTokenHash: string
+  readTokenHash: string
+}
+
 // One script prevents another request from observing half-created credentials.
 // Each SET attaches expiry immediately; a failed second SET removes the first.
 export const CREATE_SESSION_SCRIPT = `
@@ -36,33 +42,26 @@ export function sessionKeys(id: string, captureHash: string) {
 }
 
 export function createSessionCommand(
-  id: string,
-  captureHash: string,
-  readHash: string,
+  record: SessionRecord,
   lifetimeSeconds = SESSION_LIFETIME_SECONDS,
 ): (string | number)[] {
   return [
     'EVAL',
     CREATE_SESSION_SCRIPT,
     2,
-    ...sessionKeys(id, captureHash),
-    id,
-    captureHash,
-    readHash,
+    ...sessionKeys(record.id, record.captureTokenHash),
+    record.id,
+    record.captureTokenHash,
+    record.readTokenHash,
     lifetimeSeconds,
   ]
 }
 
 export async function storeSession(
   config: SessionConfig,
-  id: string,
-  captureHash: string,
-  readHash: string,
-): Promise<number> {
-  const result = await redisCommand(
-    config,
-    createSessionCommand(id, captureHash, readHash),
-  )
+  record: SessionRecord,
+): Promise<number | null> {
+  const result = await redisCommand(config, createSessionCommand(record))
   if (
     typeof result !== 'number' ||
     !Number.isSafeInteger(result) ||
@@ -70,5 +69,5 @@ export async function storeSession(
   ) {
     throw new Error('Invalid session creation result')
   }
-  return result
+  return result === 0 ? null : result
 }

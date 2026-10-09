@@ -5,7 +5,7 @@ import { sessionConfig } from '../src/config'
 import app from '../src/index'
 import { redisCommand } from '../src/redis'
 import { sessionKeys } from '../src/session-store'
-import { tokenDigest } from '../src/sessions'
+import { tokenDigest } from '../src/tokens'
 
 const bindings = env as Bindings
 const config = sessionConfig(bindings)

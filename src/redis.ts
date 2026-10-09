@@ -1,9 +1,14 @@
-import type { SessionConfig } from './config'
+import { readLimitedText } from './body'
+import type { RedisConfig } from './config'
 
-export async function redisCommand(
-  config: SessionConfig,
+const REDIS_TIMEOUT_MS = 5_000
+const MAX_REDIS_RESPONSE_BYTES = 4_096
+
+async function sendRedisCommand(
+  config: RedisConfig,
   command: (string | number)[],
-): Promise<unknown> {
+): Promise<Response> {
+  // Never automatically replay a write after an uncertain network result.
   const response = await fetch(config.redisOrigin, {
     method: 'POST',
     headers: {
@@ -12,7 +17,7 @@ export async function redisCommand(
     },
     body: JSON.stringify(command),
     redirect: 'manual',
-    signal: AbortSignal.timeout(5_000),
+    signal: AbortSignal.timeout(REDIS_TIMEOUT_MS),
   })
 
   if (!response.ok) {
@@ -20,28 +25,11 @@ export async function redisCommand(
     throw new Error('Redis request failed')
   }
 
-  const reader = response.body?.getReader()
-  if (!reader) throw new Error('Empty Redis response')
-  const chunks: Uint8Array[] = []
-  let size = 0
-  try {
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      size += value.byteLength
-      if (size > 4_096) throw new Error('Oversized Redis response')
-      chunks.push(value)
-    }
-  } finally {
-    void reader.cancel().catch(() => {})
-  }
-  const bytes = new Uint8Array(size)
-  let offset = 0
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset)
-    offset += chunk.byteLength
-  }
-  const data: unknown = JSON.parse(new TextDecoder().decode(bytes))
+  return response
+}
+
+function parseRedisReply(text: string): unknown {
+  const data: unknown = JSON.parse(text)
   if (
     !data ||
     typeof data !== 'object' ||
@@ -51,6 +39,14 @@ export async function redisCommand(
     throw new Error('Invalid Redis response')
   }
 
-  // Never automatically replay a write after an uncertain network result.
   return data.result
+}
+
+export async function redisCommand(
+  config: RedisConfig,
+  command: (string | number)[],
+): Promise<unknown> {
+  const response = await sendRedisCommand(config, command)
+  const text = await readLimitedText(response.body, MAX_REDIS_RESPONSE_BYTES)
+  return parseRedisReply(text)
 }
