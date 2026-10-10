@@ -12,20 +12,26 @@
     "dev": "wrangler dev --local --ip 127.0.0.1",
     "dev:redis": "node scripts/redis-http.ts",
     "build": "wrangler deploy --dry-run --outdir dist",
+    "build:node": "esbuild src/server.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/server.mjs",
+    "start": "node dist/server.mjs",
+    "start:local": "node --env-file=.env dist/server.mjs",
+    "test:node": "esbuild test-node/server.test.ts --bundle --platform=node --format=esm --packages=external --define:import.meta.main=false --outfile=dist/node-tests.mjs && node --test dist/node-tests.mjs",
     "typegen": "wrangler types",
     "typecheck": "npm run typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check": "npm run format:check && npm run typecheck && npm test && npm run build"
+    "check": "npm run format:check && npm run typecheck && npm test && npm run build && npm run build:node && npm run test:node"
   },
   "dependencies": {
+    "@hono/node-server": "2.1.4",
     "hono": "4.13.13"
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.4.0",
     "@types/node": "24.19.2",
+    "esbuild": "0.28.2",
     "prettier": "3.9.9",
     "redis": "6.3.0",
     "typescript": "7.0.2",

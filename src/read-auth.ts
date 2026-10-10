@@ -1,3 +1,4 @@
+import { timingSafeEqual } from 'node:crypto'
 import type { RedisConfig } from './config'
 import { redisCommand } from './redis'
 import { ReadRequestError } from './read-input'
@@ -37,10 +38,7 @@ export async function authorizeRead(
   const readTokenHash = await tokenDigest(token)
   if (
     stored === null ||
-    !crypto.subtle.timingSafeEqual(
-      digestBytes(stored),
-      digestBytes(readTokenHash),
-    )
+    !timingSafeEqual(digestBytes(stored), digestBytes(readTokenHash))
   ) {
     throw new ReadRequestError(404, 'not_found')
   }
