@@ -5,6 +5,8 @@ import { authorizeRead } from './read-auth'
 import { readInput, ReadRequestError } from './read-input'
 import { readEventPage } from './read-store'
 import { sessionLimits, SessionRateLimitError } from './session-limits'
+import { admitWorkload } from './workload-controls'
+import { WorkloadBudgetError } from './workload-budget'
 
 function failure(
   c: Context,
@@ -20,6 +22,7 @@ async function authorizedPage(c: Context<{ Bindings: Bindings }>) {
   const input = await readInput(c.req.raw, c.req.param('id'))
   const config = sessionConfig(c.env)
   const limits = sessionLimits(c.env)
+  await admitWorkload(config, c.env, 'read')
   const session = await authorizeRead(config, input.id, input.readToken)
   const page = await readEventPage(
     config,
@@ -42,6 +45,8 @@ export const readEvents: Handler<{ Bindings: Bindings }> = async (c) => {
   try {
     return await authorizedPage(c)
   } catch (error) {
+    if (error instanceof WorkloadBudgetError)
+      c.header('Retry-After', String(error.retryAfter))
     if (error instanceof SessionRateLimitError) {
       c.header('Retry-After', String(error.retryAfter))
       return failure(c, 429, 'rate_limited')

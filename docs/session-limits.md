@@ -31,4 +31,4 @@ The script reserves an admission with a single `SET ... EXAT` before doing the o
 
 Integration tests use dedicated real Redis, including concurrent minute/lifetime boundaries, deterministic Redis-clock rollover, fixed expiry, invalid credentials, HEAD/future-cursor accounting, corrupt counters, and injected SET failures. The Node listener also verifies the 429 response. Hosted Upstash compatibility and accounting remain launch checks.
 
-Global session/workload budgets and host-specific edge controls are separate, outstanding protections. Per-session limits are not a spending cap or public-launch approval.
+Global session admission and [monthly workload budgets](workload-budgets.md) are implemented separately. Host-specific edge controls remain outstanding. Per-session limits are not a spending cap or public-launch approval.

@@ -32,6 +32,10 @@ test('Node startup validates configuration and defaults to loopback', () => {
   assert.throws(() => nodeConfig({ ...localEnv, UPSTASH_REDIS_REST_TOKEN: '' }))
   assert.throws(() => nodeConfig({ ...localEnv, READ_PER_MINUTE: '0' }))
   assert.throws(() => nodeConfig({ ...localEnv, MAX_ACTIVE_SESSIONS: '0' }))
+  assert.throws(() => nodeConfig({ ...localEnv, MONTHLY_WORK_UNITS: '0' }))
+  assert.throws(() =>
+    nodeConfig({ ...localEnv, MONTHLY_REDIS_BYTES: '1000000000001' }),
+  )
   assert.equal(
     nodeConfig({ ...localEnv, READ_PER_SESSION: '3' }).bindings
       .READ_PER_SESSION,
@@ -56,11 +60,15 @@ test('Node HTTP server captures and reads through real Redis', async () => {
     READ_PER_SESSION: '3',
     SESSION_ADMISSION_SCOPE: `test-${crypto.randomUUID()}`,
     MAX_ACTIVE_SESSIONS: '1',
+    MONTHLY_WORK_UNITS: '512',
     UPSTASH_REDIS_REST_URL: `http://127.0.0.1:${bridge.port}`,
   }
   const config = sessionConfig(bindings)
   const server = startNodeServer({ bindings, port: 0, hostname: '127.0.0.1' })
-  const keys: string[] = [`play:admission:${bindings.SESSION_ADMISSION_SCOPE}`]
+  const keys: string[] = [
+    `play:admission:${bindings.SESSION_ADMISSION_SCOPE}`,
+    `play:budget:${bindings.SESSION_ADMISSION_SCOPE}`,
+  ]
   try {
     await once(server, 'listening')
     const address = server.address()
@@ -120,6 +128,13 @@ test('Node HTTP server captures and reads through real Redis', async () => {
     assert.equal(capacity.status, 503)
     assert.deepEqual(await capacity.json(), { error: 'service_unavailable' })
     assert.equal(capacity.headers.get('Retry-After'), '60')
+    const exhausted = await fetch(url, { headers })
+    assert.equal(exhausted.status, 503)
+    assert.deepEqual(await exhausted.json(), { error: 'service_unavailable' })
+    assert.equal(exhausted.headers.get('Retry-After'), '60')
+    const exhaustedHead = await fetch(url, { method: 'HEAD', headers })
+    assert.equal(exhaustedHead.status, 503)
+    assert.equal(await exhaustedHead.text(), '')
   } finally {
     server.closeAllConnections()
     await new Promise<void>((resolve) => server.close(() => resolve()))

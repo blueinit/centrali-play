@@ -132,7 +132,12 @@ describe('operator shutdown controls', () => {
   it('keeps capture and read storage available while creation is paused', async () => {
     const storage = vi
       .spyOn(globalThis, 'fetch')
-      .mockImplementation(async () => Response.json({ result: null }))
+      .mockImplementation(async (_url, init) => {
+        const command = JSON.parse(init?.body as string)
+        return Response.json({
+          result: command[0] === 'EVAL' ? ['reserved'] : null,
+        })
+      })
     const bindings: Bindings = {
       PUBLIC_BASE_URL: 'https://play.example',
       UPSTASH_REDIS_REST_URL: 'https://redis.example',
@@ -157,7 +162,7 @@ describe('operator shutdown controls', () => {
     // The fake backend reports unknown sessions; both lookups must still run.
     expect(capture.status).toBe(404)
     expect(read.status).toBe(404)
-    expect(storage).toHaveBeenCalledTimes(2)
+    expect(storage).toHaveBeenCalledTimes(4)
   })
 
   it.each(['true', 'invalid'])(

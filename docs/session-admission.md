@@ -1,6 +1,6 @@
 # Global session admission
 
-Creation shares a Redis admission ledger across Node and Worker instances. It limits new creation admissions per UTC hour/day and the number of live or pending sessions. These limits protect session capacity; global command/transfer budgets remain a separate, unfinished stage.
+Creation shares a Redis admission ledger across Node and Worker instances. It limits new creation admissions per UTC hour/day and the number of live or pending sessions. These limits protect session capacity; [monthly workload budgets](workload-budgets.md) protect admitted work separately.
 
 ## Configuration
 
@@ -31,9 +31,9 @@ One `play:admission:<scope>` JSON record holds the current hour/day counts and a
 
 Malformed ledger state fails safely rather than resetting it. Use a non-evicting database policy and verify hosted behavior: protection depends on retaining the ledger until its expiry. The bounded JSON registry is intended for modest session capacity; measure memory, scripting work, and command/transfer use before raising defaults.
 
-Capacity exhaustion returns 503 with `{"error":"service_unavailable"}`, `Cache-Control: no-store`, and integer `Retry-After` between 1 and 60 seconds. It does not identify the exhausted cap or disclose usage. Existing capture/read routes remain available subject to their own session limits. Per-client creation 429 behavior belongs to host-specific edge controls.
+Capacity exhaustion returns 503 with `{"error":"service_unavailable"}`, `Cache-Control: no-store`, and integer `Retry-After` between 1 and 60 seconds. It does not identify the exhausted cap or disclose usage. Existing capture/read routes remain available subject to their session limits and monthly workload budgets. Per-client creation 429 behavior belongs to host-specific edge controls.
 
-Denied creation still performs a Redis admission check. These limits do not guarantee a dollar bill or bound credential probes, captures, reads, or denial traffic. Keep instances private until global workload protection, ingress controls, hosted Upstash compatibility, and launch procedures are verified.
+Denied creation still performs a Redis admission check and retains its monthly workload reservation. These capacity limits do not guarantee a dollar bill or bound credential probes, captures, reads, or denial traffic on their own. Keep instances private until ingress controls, hosted Upstash compatibility, and launch procedures are verified.
 
 ## Verification
 

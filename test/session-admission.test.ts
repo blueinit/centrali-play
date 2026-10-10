@@ -27,6 +27,7 @@ function policy(overrides = {}) {
   }
   const admission = sessionAdmissionConfig(env)
   keys.push(admission.key)
+  keys.push(`play:budget:${env.SESSION_ADMISSION_SCOPE}`)
   return { env, admission }
 }
 
@@ -298,13 +299,14 @@ describe('session admission HTTP behavior', () => {
       .spyOn(globalThis, 'fetch')
       .mockImplementation(async (url, init) => {
         const command = JSON.parse(init?.body as string)
+        if (command[2] === 1) return original(url, init)
         keys.push(command[3], command[4])
         await original(url, init)
         throw new Error('Synthetic lost response')
       })
     const response = await app.request('/sessions', { method: 'POST' }, env)
     expect(response.status).toBe(503)
-    expect(storage).toHaveBeenCalledTimes(1)
+    expect(storage).toHaveBeenCalledTimes(2)
     storage.mockRestore()
     const current = await state(admission.key)
     expect(current.daily).toBe(1)

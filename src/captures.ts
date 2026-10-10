@@ -10,6 +10,8 @@ import {
 import { appendCapture, findCaptureSession } from './capture-store'
 import { tokenDigest } from './tokens'
 import { sessionLimits, SessionRateLimitError } from './session-limits'
+import { admitWorkload } from './workload-controls'
+import { WorkloadBudgetError } from './workload-budget'
 
 function failure(
   c: Context,
@@ -27,6 +29,7 @@ async function persistRequest(
   const metadata = captureMetadata(c.req.raw)
   const config = sessionConfig(c.env)
   const limits = sessionLimits(c.env)
+  await admitWorkload(config, c.env, 'capture')
   const session = await findCaptureSession(config, await tokenDigest(token))
   if (!session) return failure(c, 404, 'not_found')
   const input = await captureInput(c.req.raw, metadata)
@@ -47,6 +50,8 @@ export const captureRequest: Handler<{ Bindings: Bindings }> = async (c) => {
   try {
     return await persistRequest(c, token)
   } catch (error) {
+    if (error instanceof WorkloadBudgetError)
+      c.header('Retry-After', String(error.retryAfter))
     if (error instanceof SessionRateLimitError) {
       c.header('Retry-After', String(error.retryAfter))
       return failure(c, 429, 'rate_limited')

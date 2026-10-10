@@ -2,7 +2,7 @@
 
 Play has a standalone Node.js server and Docker image. Neither requires a Cloudflare account or Wrangler at runtime. Both use the same session, capture, and read handlers as the local Worker tests.
 
-This is a runtime foundation, not a public-launch release: per-session limits and global session admission are implemented, but strict workload budgets remain unimplemented. Keep instances private while those protections and hosted compatibility checks are completed.
+This is a runtime foundation, not a public-launch release: per-session limits, global session admission, and monthly workload budgets are implemented. Keep instances private while ingress controls and hosted compatibility checks are completed.
 
 ## Local Node server
 
@@ -31,6 +31,8 @@ The standalone server supports the [Upstash Redis REST API](https://upstash.com/
 | `DISABLE_STORAGE_ROUTES`   | Optional `true`/`false` switch for all storage routes.                                                                               |
 
 Configuration is validated before the Node listener opens. Invalid configuration exits with a fixed error message, without printing supplied values. A valid configuration does not prove database reachability: `/health` remains a liveness check, and storage failures return safe 503 responses.
+
+Origins and the REST credential are bounded to 2 KiB. [Monthly workload variables](workload-budgets.md#configuration) configure shared unit/transfer reservations. Their defaults apply to both runtimes; use identical limits and scope across instances sharing a deployment.
 
 Session/capture/read scripts require Redis scripting and the commands described in their contracts. Upstash [documents Lua support](https://upstash.com/docs/redis/overall/compatibility), but this repository's integration tests run against dedicated local Redis. Verify the complete scripts, exact expiry/trim behavior, response sizes, and provider accounting against a dedicated hosted test database before launch.
 

@@ -1,6 +1,6 @@
 # Abuse-control contract
 
-This defines the abuse-control implementation stage. Operator shutdown switches, [per-session limits](session-limits.md), and [global session admission](session-admission.md) are implemented locally. The [monthly workload counter](workload-budgets.md) is tested, but route integration and verified weights remain pending; edge identity policy also remains proposed. Public deployment requires the complete stage, hosted compatibility tests, quota measurements, and a reviewed release workflow.
+This defines the abuse-control implementation stage. Operator shutdown switches, [per-session limits](session-limits.md), [global session admission](session-admission.md), and [monthly workload budgets](workload-budgets.md) are implemented locally. Edge identity policy remains proposed. Public deployment requires the complete stage, hosted compatibility tests, quota measurements, and a reviewed release workflow.
 
 ## Two layers of admission
 
@@ -29,7 +29,7 @@ These are conservative application defaults, not provider quotas. Keep them in n
 | Admitted workload globally                | 200,000 work units per UTC calendar month.                    | Atomic Redis reservation.                  |
 | Reserved Redis transfer globally          | 2 GiB per UTC calendar month.                                 | Atomic Redis reservation.                  |
 
-Reserve 64 work units for each operation that could reach storage. Reserve 64 KiB of Redis transfer for creation, and 384 KiB for capture or read/HEAD. These weights deliberately exceed normal use and include admission overhead, bounded collision attempts, metadata checks, script commands, and transport framing. They are application safety allowances, not a claim about exact provider billing. The implementation must verify that each admitted operation stays within its allowance.
+Reserve 64 work units for each operation that could reach storage. Reserve 1 MiB of Redis transfer for creation, and 384 KiB for capture or read/HEAD. These weights deliberately exceed normal use and include admission overhead, bounded collision attempts, metadata checks, script commands, and transport framing. They are application safety allowances, not a claim about exact provider billing. The [verification tests](workload-budgets.md#allowance-verification-and-limits) check command counts and serialized bounds; hosted measurements remain required.
 
 Do not refund reservations after invalid capabilities, client disconnects, storage errors, or uncertain results. This avoids overspending through retry or refund races. Cheap rejections that never need storage do not reserve workload. Repeated rejected admission checks still consume provider resources; application limits alone cannot guarantee availability during an attack.
 

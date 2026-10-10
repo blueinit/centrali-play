@@ -66,7 +66,9 @@ Redis script execution prevents interleaving but does not roll back commands aft
 
 The implementation uses exact [XADD trimming](https://redis.io/docs/latest/commands/xadd/) and [EXPIREAT](https://redis.io/docs/latest/commands/expireat/) in the same script. If expiry attachment fails, the script deletes the event stream and returns an error. This deliberately discards the session's captures rather than retain data without a deadline. Operators must grant all required script commands, including cleanup with `DEL`; provider permissions and compatibility must be checked before launch.
 
-A successful capture uses three Redis HTTP calls: capture lookup, live-session validation, and the final atomic append. The body is consumed only after the live-session check. Header and query bounds are checked before database access. Redis reply limits remain 4 KiB because capture returns only an ID internally, not the captured payload.
+A successful capture normally uses four Redis HTTP calls: monthly workload reservation, capture lookup, live-session validation, and the final atomic append. A confirmed month mismatch can add one reservation call. The body is consumed only after admission and the live-session check. Header and query bounds are checked before database access. Redis reply limits remain 4 KiB because capture returns only an ID internally, not the captured payload.
+
+[Monthly budget](workload-budgets.md) exhaustion returns safe 503 with bounded `Retry-After`, including bodyless HEAD responses. Well-formed unknown capabilities and downstream failures retain their reservation. Cached global denials perform no Redis lookup or body read.
 
 The local development bridge permits commands up to 256 KiB to accommodate a bounded base64 body, headers, and the script. It remains loopback-only development tooling.
 
