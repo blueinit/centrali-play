@@ -10,16 +10,17 @@ Accept GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS. HEAD is captured but it
 
 Return 204 with `Cache-Control: no-store` only after Redis confirms persistence. Do not echo the request or return credentials. An empty body is a valid capture.
 
-| Status | JSON error code       | Meaning                                            |
-| ------ | --------------------- | -------------------------------------------------- |
-| 404    | `not_found`           | Malformed, unknown, or expired capture capability. |
-| 405    | `method_not_allowed`  | Unsupported method.                                |
-| 413    | `payload_too_large`   | A body, header, or query limit was exceeded.       |
-| 408    | `request_timeout`     | The body did not finish within the read deadline.  |
-| 400    | `invalid_request`     | The request stream failed.                         |
-| 503    | `service_unavailable` | Storage failed or the write result is uncertain.   |
+| Status | JSON error code       | Meaning                                                          |
+| ------ | --------------------- | ---------------------------------------------------------------- |
+| 404    | `not_found`           | Malformed, unknown, or expired capture capability.               |
+| 405    | `method_not_allowed`  | Unsupported method.                                              |
+| 413    | `payload_too_large`   | A body, header, or query limit was exceeded.                     |
+| 408    | `request_timeout`     | The body did not finish within the read deadline.                |
+| 400    | `invalid_request`     | The request stream failed.                                       |
+| 429    | `rate_limited`        | The session's minute or lifetime capture allowance is exhausted. |
+| 503    | `service_unavailable` | Storage failed or the write result is uncertain.                 |
 
-Errors disable caching and include no request content, credentials, or backend details. HEAD responses have no body, including errors. Rate limiting and its 429 response belong to the subsequent abuse-control stage.
+Errors disable caching and include no request content, credentials, or backend details. HEAD responses have no body, including errors. The [per-session limits](session-limits.md) define minute/lifetime admission, fixed counter expiry, and `Retry-After` on 429 responses. Denied captures do not append or refresh event storage.
 
 ## Bounded input
 

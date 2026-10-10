@@ -209,7 +209,7 @@ describe('capture HTTP contract', () => {
       .mockImplementation(async (input, init) => {
         const command = JSON.parse(init?.body as string)
         const response = await original(input, init)
-        if (command[0] === 'EVAL' && command[2] === 3)
+        if (command[0] === 'EVAL' && command[2] === 4)
           throw new Error('private backend detail')
         return response
       })

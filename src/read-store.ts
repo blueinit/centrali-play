@@ -11,6 +11,12 @@ import {
 } from './read-script'
 import { parseStoredEvent } from './stored-event'
 import type { StoredEvent } from './stored-event'
+import {
+  DEFAULT_SESSION_LIMITS,
+  checkRateLimit,
+  sessionLimitKey,
+} from './session-limits'
+import type { SessionLimits } from './session-limits'
 
 export type EventPage = {
   events: StoredEvent[]
@@ -59,17 +65,21 @@ export function readEventsCommand(
   session: ReadSession,
   after: string,
   head = false,
+  limits: SessionLimits = DEFAULT_SESSION_LIMITS,
 ): (string | number)[] {
   return [
     'EVAL',
     READ_EVENTS_SCRIPT,
-    2,
+    3,
     `play:session:${session.id}`,
     eventKey(session.id),
+    sessionLimitKey(session.id),
     session.id,
     session.readTokenHash,
     after,
     head ? 'head' : 'page',
+    limits.readPerMinute,
+    limits.readPerSession,
   ]
 }
 
@@ -78,13 +88,15 @@ export async function readEventPage(
   session: ReadSession,
   after: string,
   head = false,
+  limits: SessionLimits = DEFAULT_SESSION_LIMITS,
 ): Promise<EventPage | null> {
   const result = await boundedRedisCommand(
     config,
-    readEventsCommand(session, after, head),
+    readEventsCommand(session, after, head, limits),
     MAX_READ_REPLY_BYTES,
   )
   if (result === null) throw new ReadRequestError(404, 'not_found')
+  checkRateLimit(result)
   if (
     Array.isArray(result) &&
     result.length === 1 &&

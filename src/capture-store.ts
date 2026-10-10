@@ -2,6 +2,13 @@ import type { RedisConfig } from './config'
 import type { CaptureInput } from './capture-input'
 import { redisCommand } from './redis'
 import { sessionKeys } from './session-store'
+import { SESSION_LIMIT_SCRIPT } from './session-limit-script'
+import {
+  DEFAULT_SESSION_LIMITS,
+  checkRateLimit,
+  sessionLimitKey,
+} from './session-limits'
+import type { SessionLimits } from './session-limits'
 
 export const MAX_EVENTS = 50
 export type CaptureSession = { id: string; captureHash: string }
@@ -22,9 +29,12 @@ if session.expiresAt <= tonumber(now[1]) then return nil end
 
 const CHECK_SESSION_SCRIPT = `${LIVE_SESSION_SCRIPT}\nreturn 1`
 
-export const APPEND_CAPTURE_SCRIPT = `${LIVE_SESSION_SCRIPT}
+export const APPEND_CAPTURE_SCRIPT = `${SESSION_LIMIT_SCRIPT}${LIVE_SESSION_SCRIPT}
 local event = cjson.decode(ARGV[3])
 if type(event) ~= 'table' or event.version ~= 1 then return redis.error_reply('Invalid event') end
+local retry = sessionAllowance(KEYS[4], 'capture', tonumber(now[1]), session.expiresAt,
+  tonumber(ARGV[4]), tonumber(ARGV[5]))
+if retry > 0 then return { 'rate_limited', retry } end
 local receivedAt = tonumber(now[1]) * 1000 + math.floor(tonumber(now[2]) / 1000)
 -- Keep the original JSON intact: cjson re-encodes empty arrays as objects.
 local id = redis.call('XADD', KEYS[3], 'MAXLEN', '=', ${MAX_EVENTS}, '*',
@@ -72,15 +82,19 @@ export async function findCaptureSession(
 export function appendCaptureCommand(
   session: CaptureSession,
   input: CaptureInput,
+  limits: SessionLimits = DEFAULT_SESSION_LIMITS,
 ): (string | number)[] {
   return [
     'EVAL',
     APPEND_CAPTURE_SCRIPT,
-    3,
+    4,
     ...captureKeys(session),
+    sessionLimitKey(session.id),
     session.id,
     session.captureHash,
     JSON.stringify(input),
+    limits.capturePerMinute,
+    limits.capturePerSession,
   ]
 }
 
@@ -88,12 +102,14 @@ export async function appendCapture(
   config: RedisConfig,
   session: CaptureSession,
   input: CaptureInput,
+  limits: SessionLimits = DEFAULT_SESSION_LIMITS,
 ): Promise<boolean> {
   const result = await redisCommand(
     config,
-    appendCaptureCommand(session, input),
+    appendCaptureCommand(session, input, limits),
   )
   if (result === null) return false
+  checkRateLimit(result)
   if (typeof result !== 'string' || !/^\d+-\d+$/.test(result))
     throw new Error('Invalid capture append result')
   return true

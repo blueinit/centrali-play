@@ -37,6 +37,7 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 - `src/index.ts`: Hono app and Worker entry point.
 - `src/server.ts`, `src/node-server.ts`, and `src/node-config.ts`: standalone Node lifecycle, listener, and startup validation.
 - `src/storage-controls.ts`: operator shutdown switches before body or storage work.
+- `src/session-limits.ts` and `src/session-limit-script.ts`: validated allowances, safe rate-limit replies, and atomic expiring counters.
 - `src/sessions.ts`: HTTP validation and session creation responses.
 - `src/session-service.ts`: credential creation and bounded collision retries.
 - `src/tokens.ts`: random credentials and token digests.

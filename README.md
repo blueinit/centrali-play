@@ -2,7 +2,7 @@
 
 A small, disposable webhook capture API. Create a temporary session, send HTTP requests to its capture URL, and retrieve the captured requests as JSON.
 
-**Early development:** health checks, session creation, bounded capture, authorized event reads, and operator shutdown switches work locally. No hosted service is available; public deployment awaits admission limits and the remaining abuse controls.
+**Early development:** health checks, session creation, bounded capture, authorized event reads, per-session limits, and operator shutdown switches work locally. No hosted service is available; public deployment awaits global budgets and the remaining abuse controls.
 
 ## Purpose
 
@@ -88,6 +88,7 @@ Individual commands and repository structure are documented in [Contributing](CO
 - [Session contract](docs/sessions.md): creation response, credentials, expiry, and configuration.
 - [Capture contract](docs/capture.md): methods, limits, redaction, binary encoding, and storage.
 - [Event-read contract](docs/reads.md): authorization, cursor pagination, response bounds, and polling.
+- [Per-session limits](docs/session-limits.md): capture/read allowances, configuration, and safe 429 responses.
 - [Abuse-control contract](docs/abuse-controls.md): implemented shutdown switches and proposed rate limits, global budgets, and privacy rules.
 - [Roadmap](docs/roadmap.md): planned capabilities and release readiness.
 - [Contributing](CONTRIBUTING.md): changes, code expectations, and review.

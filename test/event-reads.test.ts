@@ -8,6 +8,7 @@ import { authorizeRead } from '../src/read-auth'
 import { sessionKeys } from '../src/session-store'
 import { tokenDigest } from '../src/tokens'
 import { eventKey } from '../src/capture-store'
+import { sessionLimitKey } from '../src/session-limits'
 import { redisCommand } from '../src/redis'
 import {
   bindings,
@@ -46,6 +47,7 @@ describe('event-read HTTP contract', () => {
     keys.push(
       ...sessionKeys(session.id, await tokenDigest(token)),
       eventKey(session.id),
+      sessionLimitKey(session.id),
     )
     const captured = await exports.default.fetch(session.captureUrl, {
       method: 'POST',
