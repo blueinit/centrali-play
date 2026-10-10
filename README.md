@@ -89,7 +89,8 @@ Individual commands and repository structure are documented in [Contributing](CO
 - [Capture contract](docs/capture.md): methods, limits, redaction, binary encoding, and storage.
 - [Event-read contract](docs/reads.md): authorization, cursor pagination, response bounds, and polling.
 - [Per-session limits](docs/session-limits.md): capture/read allowances, configuration, and safe 429 responses.
-- [Abuse-control contract](docs/abuse-controls.md): implemented shutdown switches and proposed rate limits, global budgets, and privacy rules.
+- [Global session admission](docs/session-admission.md): creation limits, shared capacity, pending slots, and safe exhaustion.
+- [Abuse-control contract](docs/abuse-controls.md): implemented protections and proposed workload budgets, edge controls, and privacy rules.
 - [Roadmap](docs/roadmap.md): planned capabilities and release readiness.
 - [Contributing](CONTRIBUTING.md): changes, code expectations, and review.
 - [Maintaining](docs/maintaining.md): ownership, releases, deployment, and incidents.

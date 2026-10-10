@@ -10,6 +10,7 @@ export default defineConfig({
           PUBLIC_BASE_URL: 'https://play.example',
           UPSTASH_REDIS_REST_URL: `http://127.0.0.1:${inject('redisHttpPort')}`,
           UPSTASH_REDIS_REST_TOKEN: 'local-development-only',
+          SESSION_ADMISSION_SCOPE: inject('admissionScope'),
         },
       },
     })),

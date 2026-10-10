@@ -1,6 +1,6 @@
 # Design
 
-The standalone Node server and local Worker implement health checks, session creation, bounded capture, authorized event reads, per-session limits, and operator shutdown switches. Global admission limits remain planned. API details and limits may change before the first release.
+The standalone Node server and local Worker implement health checks, session creation, bounded capture, authorized event reads, per-session limits, global session admission, and operator shutdown switches. Global workload budgets remain planned. API details and limits may change before the first release.
 
 ## Architecture
 
@@ -18,7 +18,7 @@ The [capture contract](capture.md) defines implemented input limits, binary enco
 
 The [event-read contract](reads.md) defines bearer authorization, exclusive cursors, retention warnings, bounded pages, and polling backoff.
 
-The [abuse-control contract](abuse-controls.md) defines implemented operator shutdown switches and proposed edge guards, strict global/session admission, workload and transfer budgets, client identity, and privacy rules.
+The [abuse-control contract](abuse-controls.md) defines implemented shutdown switches and session admission/limits, plus proposed edge guards, workload and transfer budgets, client identity, and privacy rules.
 
 | Operation                    | Purpose                                                            |
 | ---------------------------- | ------------------------------------------------------------------ |
@@ -29,7 +29,7 @@ The [abuse-control contract](abuse-controls.md) defines implemented operator shu
 
 Health, session creation, capture, and event reads are available locally. Health returns `{"status":"ok"}` with HTTP 200 and checks liveness only. All operations disable caching. Unknown routes return JSON 404 responses. Capture supports GET, POST, PUT, PATCH, DELETE, HEAD, and OPTIONS; reads support GET and HEAD. Unsupported capture/read methods return 405. HEAD returns headers without a response body.
 
-Implemented limits: one-hour lifetime, latest 50 events, 64 KiB bodies. The capture contract specifies header/query limits and base64 body encoding. Read pages contain up to 10 events and 256 KiB. Rate limits remain open.
+Implemented limits include a one-hour lifetime, latest 50 events, 64 KiB bodies, per-session capture/read limits, and global creation/capacity limits. The capture contract specifies header/query limits and base64 body encoding. Read pages contain up to 10 events and 256 KiB. Global workload budgets and edge guards remain planned.
 
 Capture tokens must not authorize reads. IDs are identifiers, not credentials. Tokens must be cryptographically random. Session creation and read responses must disable caching.
 

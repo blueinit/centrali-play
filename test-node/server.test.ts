@@ -31,6 +31,7 @@ test('Node startup validates configuration and defaults to loopback', () => {
   )
   assert.throws(() => nodeConfig({ ...localEnv, UPSTASH_REDIS_REST_TOKEN: '' }))
   assert.throws(() => nodeConfig({ ...localEnv, READ_PER_MINUTE: '0' }))
+  assert.throws(() => nodeConfig({ ...localEnv, MAX_ACTIVE_SESSIONS: '0' }))
   assert.equal(
     nodeConfig({ ...localEnv, READ_PER_SESSION: '3' }).bindings
       .READ_PER_SESSION,
@@ -53,11 +54,13 @@ test('Node HTTP server captures and reads through real Redis', async () => {
   const bindings = {
     ...localEnv,
     READ_PER_SESSION: '3',
+    SESSION_ADMISSION_SCOPE: `test-${crypto.randomUUID()}`,
+    MAX_ACTIVE_SESSIONS: '1',
     UPSTASH_REDIS_REST_URL: `http://127.0.0.1:${bridge.port}`,
   }
   const config = sessionConfig(bindings)
   const server = startNodeServer({ bindings, port: 0, hostname: '127.0.0.1' })
-  const keys: string[] = []
+  const keys: string[] = [`play:admission:${bindings.SESSION_ADMISSION_SCOPE}`]
   try {
     await once(server, 'listening')
     const address = server.address()
@@ -113,6 +116,10 @@ test('Node HTTP server captures and reads through real Redis', async () => {
     assert.equal(limited.status, 429)
     assert.deepEqual(await limited.json(), { error: 'rate_limited' })
     assert.ok(Number(limited.headers.get('Retry-After')) > 0)
+    const capacity = await fetch(`${origin}/sessions`, { method: 'POST' })
+    assert.equal(capacity.status, 503)
+    assert.deepEqual(await capacity.json(), { error: 'service_unavailable' })
+    assert.equal(capacity.headers.get('Retry-After'), '60')
   } finally {
     server.closeAllConnections()
     await new Promise<void>((resolve) => server.close(() => resolve()))
