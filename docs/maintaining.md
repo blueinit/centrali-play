@@ -16,7 +16,7 @@ Private vulnerability reporting and dependency alerts are enabled. Dependabot ch
 
 No release or deployment exists. The [standalone runtime guide](running.md) covers Node/Docker operation with Upstash. Before `v0.1.0`, verify clean-checkout setup, expiry/concurrency, authorization, limits, backend failures, safe logs, and realistic polling costs. Finalize API documentation and supported versions.
 
-For routine PRs, run `npm ci`, `docker compose up -d --wait`, and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. Both runtimes support bounded capture, authorized reads, per-session limits, global session admission, and operator shutdown switches. The [monthly workload counter](workload-budgets.md) is implemented, but routes do not reserve budgets yet. Keep instances private; public Worker and preview URLs are disabled in configuration.
+For routine PRs, run `npm ci`, `docker compose up -d --wait`, and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. Both runtimes support bounded capture, authorized reads, per-session limits, global session admission, [monthly workload budgets](workload-budgets.md), and operator shutdown switches. Keep instances private while ingress and hosted verification remain pending; public Worker and preview URLs are disabled in configuration.
 
 Use semantic version tags and release notes explaining behavior, compatibility, and known limitations. Announce breaking API changes explicitly, including before 1.0.
 

@@ -3,6 +3,8 @@ import type { Bindings } from './config'
 import { sessionConfig } from './config'
 import { hasRequestBody } from './body'
 import { createNewSession } from './session-service'
+import { admitWorkload } from './workload-controls'
+import { WorkloadBudgetError } from './workload-budget'
 import {
   sessionAdmissionConfig,
   SessionAdmissionError,
@@ -19,13 +21,16 @@ export const createSession: Handler<{ Bindings: Bindings }> = async (c) => {
   }
 
   try {
-    const session = await createNewSession(
-      sessionConfig(c.env),
-      sessionAdmissionConfig(c.env),
-    )
+    const config = sessionConfig(c.env)
+    const admission = sessionAdmissionConfig(c.env)
+    await admitWorkload(config, c.env, 'creation')
+    const session = await createNewSession(config, admission)
     return c.json(session, 201)
   } catch (error) {
-    if (error instanceof SessionAdmissionError)
+    if (
+      error instanceof SessionAdmissionError ||
+      error instanceof WorkloadBudgetError
+    )
       c.header('Retry-After', String(error.retryAfter))
     // Backend and configuration errors must not expose credentials or payloads.
     return c.json({ error: 'service_unavailable' }, 503)

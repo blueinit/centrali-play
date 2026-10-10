@@ -3,6 +3,7 @@ import { sessionConfig } from './config'
 import { shutdownConfig } from './storage-controls'
 import { sessionLimits } from './session-limits'
 import { sessionAdmissionConfig } from './session-admission'
+import { workloadConfig } from './workload-controls'
 
 export function nodeConfig(env: Record<string, string | undefined>) {
   const bindings: Bindings = {}
@@ -20,6 +21,8 @@ export function nodeConfig(env: Record<string, string | undefined>) {
     'SESSIONS_PER_HOUR',
     'SESSIONS_PER_DAY',
     'MAX_ACTIVE_SESSIONS',
+    'MONTHLY_WORK_UNITS',
+    'MONTHLY_REDIS_BYTES',
   ] as const) {
     if (env[name] !== undefined) bindings[name] = env[name]
   }
@@ -27,6 +30,7 @@ export function nodeConfig(env: Record<string, string | undefined>) {
   shutdownConfig(bindings)
   sessionLimits(bindings)
   sessionAdmissionConfig(bindings)
+  workloadConfig(bindings)
   const port = env.PORT ?? '3000'
   if (!/^[1-9][0-9]{0,4}$/.test(port) || Number(port) > 65_535)
     throw new Error('Invalid port configuration')

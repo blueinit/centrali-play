@@ -83,7 +83,7 @@ Errors use JSON with a stable error code and `Cache-Control: no-store`. Response
 | 429    | `{"error":"rate_limited"}`        | The caller has exceeded creation limits. Include `Retry-After`.                   |
 | 503    | `{"error":"service_unavailable"}` | Storage is unavailable, quotas are exhausted, or configuration prevents creation. |
 
-The server detects an unexpected body without buffering an unbounded request. Global creation/capacity exhaustion returns safe 503 with bounded `Retry-After`, as described in the admission contract. The 429 response remains reserved for per-client creation controls and is not implemented yet. Backend failures, including backend quota errors, return 503. Public deployment still requires global workload protection and ingress controls.
+The server detects an unexpected body without buffering an unbounded request. Global creation/capacity or [monthly workload](workload-budgets.md) exhaustion returns safe 503 with bounded `Retry-After`. Creation reserves workload once, including its confirmed collision retries. The 429 response remains reserved for per-client creation controls and is not implemented yet. Backend failures, including backend quota errors, return 503. Public deployment still requires ingress controls and hosted verification.
 
 ## Storage and configuration
 

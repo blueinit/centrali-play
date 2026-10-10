@@ -220,7 +220,7 @@ describe('capture HTTP contract', () => {
     )
     expect(response.status).toBe(503)
     expect(await response.json()).toEqual({ error: 'service_unavailable' })
-    expect(spy).toHaveBeenCalledTimes(3)
+    expect(spy).toHaveBeenCalledTimes(4)
     spy.mockRestore()
     expect(await redisCommand(config, ['XLEN', session.eventsKey])).toBe(1)
   })

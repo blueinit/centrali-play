@@ -122,9 +122,9 @@ describe('session creation', () => {
     'http://localhost:8787',
     'http://[::1]:8787',
   ])('accepts loopback public origin %s', async (origin) => {
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(
-      Response.json({ result: 2_000_000_000 }),
-    )
+    vi.spyOn(globalThis, 'fetch')
+      .mockResolvedValue(Response.json({ result: 2_000_000_000 }))
+      .mockResolvedValueOnce(Response.json({ result: ['reserved'] }))
     const response = await app.request(
       '/sessions',
       { method: 'POST' },
@@ -173,7 +173,10 @@ describe('session creation', () => {
   ])(
     'hides backend errors and does not retry an uncertain write',
     async (reply) => {
-      const storage = vi.spyOn(globalThis, 'fetch').mockResolvedValue(reply())
+      const storage = vi
+        .spyOn(globalThis, 'fetch')
+        .mockResolvedValue(reply())
+        .mockResolvedValueOnce(Response.json({ result: ['reserved'] }))
       const response = await app.request(
         '/sessions',
         { method: 'POST' },
@@ -182,7 +185,7 @@ describe('session creation', () => {
       expect(response.status).toBe(503)
       expect(response.headers.get('Cache-Control')).toBe('no-store')
       expect(await response.json()).toEqual({ error: 'service_unavailable' })
-      expect(storage).toHaveBeenCalledTimes(1)
+      expect(storage).toHaveBeenCalledTimes(2)
       expect(storage.mock.calls[0]?.[1]?.redirect).toBe('manual')
     },
   )
@@ -191,6 +194,7 @@ describe('session creation', () => {
     const storage = vi
       .spyOn(globalThis, 'fetch')
       .mockRejectedValue(new Error('credential leak'))
+      .mockResolvedValueOnce(Response.json({ result: ['reserved'] }))
     const response = await app.request(
       '/sessions',
       { method: 'POST' },
@@ -198,23 +202,24 @@ describe('session creation', () => {
     )
     expect(response.status).toBe(503)
     expect(await response.json()).toEqual({ error: 'service_unavailable' })
-    expect(storage).toHaveBeenCalledTimes(1)
+    expect(storage).toHaveBeenCalledTimes(2)
   })
 
   it('retries only confirmed collisions with fresh credentials and a fixed cap', async () => {
     const storage = vi
       .spyOn(globalThis, 'fetch')
       .mockImplementation(async () => Response.json({ result: 0 }))
+      .mockResolvedValueOnce(Response.json({ result: ['reserved'] }))
     const response = await app.request(
       '/sessions',
       { method: 'POST' },
       bindings,
     )
     expect(response.status).toBe(503)
-    expect(storage).toHaveBeenCalledTimes(3)
-    const commands = storage.mock.calls.map((call) =>
-      JSON.parse(call[1]?.body as string),
-    )
+    expect(storage).toHaveBeenCalledTimes(4)
+    const commands = storage.mock.calls
+      .slice(1)
+      .map((call) => JSON.parse(call[1]?.body as string))
     expect(new Set(commands.map((command) => command[3])).size).toBe(3)
     expect(new Set(commands.map((command) => command[4])).size).toBe(3)
   })

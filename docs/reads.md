@@ -69,7 +69,9 @@ Selection, retention comparison, and `hasMore` use one consistent Redis script s
 
 Clients can fetch the next page immediately while `hasMore` is true, subject to their read allowance. Otherwise begin polling at five-second intervals. After empty pages, back off to 10, 20, and then 30 seconds, with jitter; reset after receiving events. Stop at `expiresAt` or a 404. Retry a 503 with backoff. Honor `Retry-After` on 429 responses, and never automatically create a replacement session.
 
-The successful read path uses two Redis HTTP calls: metadata authorization and atomic page selection. HEAD also needs Redis-time and cursor validation; Redis examines the stream boundaries, but no event payloads are transferred to or parsed by the Worker. Empty polling still has a cost: polling every five seconds for one hour would use approximately 1,440 HTTP calls before retries or pagination. Backoff reduces that load. Provider command billing can differ from HTTP call counts; measure both commands and bandwidth before launch.
+The successful read path normally uses three Redis HTTP calls: monthly workload reservation, metadata authorization, and atomic page selection. A confirmed month mismatch can add one reservation call. HEAD also reserves workload and needs Redis-time/cursor validation; Redis examines stream boundaries, but no event payloads are transferred to or parsed by the Worker. Empty polling still has a cost: polling every five seconds for one hour would use approximately 2,160 HTTP calls before retries or pagination. Backoff reduces that load. Provider command billing can differ from HTTP call counts; measure both commands and bandwidth before launch.
+
+[Monthly budget](workload-budgets.md) exhaustion returns safe 503 with bounded `Retry-After`, including bodyless HEAD responses. Honor `Retry-After` on these responses as well as 429. Well-formed unknown sessions and wrong credentials spend global budget without consuming an owner's authorized-read allowance.
 
 ## Errors and verification
 

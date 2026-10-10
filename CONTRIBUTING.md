@@ -41,7 +41,8 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 - `src/sessions.ts`: HTTP validation and session creation responses.
 - `src/session-service.ts`: credential creation and bounded collision retries.
 - `src/session-admission.ts` and `src/session-admission-script.ts`: global creation configuration, safe denials, and atomic pending/live capacity.
-- `src/workload-budget.ts` and `src/workload-budget-script.ts`: monthly Redis reservations; route integration is pending.
+- `src/workload-budget.ts` and `src/workload-budget-script.ts`: atomic monthly Redis reservations and window validation.
+- `src/workload-controls.ts`: operator budget configuration, operation weights, and bounded denial caching before storage.
 - `src/tokens.ts`: random credentials and token digests.
 - `src/body.ts`: bounded stream reading and request-body detection.
 - `src/captures.ts`: capture HTTP validation and responses.

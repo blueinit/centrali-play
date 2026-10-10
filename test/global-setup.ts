@@ -14,7 +14,7 @@ export default async function setup(project: TestProject) {
           redisOrigin: `http://127.0.0.1:${bridge.port}`,
           redisToken: 'local-development-only',
         },
-        ['DEL', `play:admission:${scope}`],
+        ['DEL', `play:admission:${scope}`, `play:budget:${scope}`],
       )
     } finally {
       await bridge.close()

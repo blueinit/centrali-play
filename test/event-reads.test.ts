@@ -256,7 +256,8 @@ describe('event-read HTTP contract', () => {
         .spyOn(globalThis, 'fetch')
         .mockImplementation(async (url, init) => {
           const command = JSON.parse(init?.body as string)
-          if (command[0] !== 'EVAL') return original(url, init)
+          if (command[0] !== 'EVAL' || command[2] !== 3)
+            return original(url, init)
           if (failure === 'network') throw new Error('private storage detail')
           if (failure === 'oversized') return new Response('x'.repeat(262_145))
           return Response.json({
@@ -266,7 +267,7 @@ describe('event-read HTTP contract', () => {
       const response = await read(capture.id, capture.readToken)
       expect(response.status).toBe(503)
       expect(await response.json()).toEqual({ error: 'service_unavailable' })
-      expect(storage).toHaveBeenCalledTimes(2)
+      expect(storage).toHaveBeenCalledTimes(3)
     },
   )
 })

@@ -3,11 +3,15 @@ import type { RedisConfig } from './config'
 
 const REDIS_TIMEOUT_MS = 5_000
 const MAX_REDIS_RESPONSE_BYTES = 4_096
+export const MAX_REDIS_COMMAND_BYTES = 262_144
 
 async function sendRedisCommand(
   config: RedisConfig,
   command: (string | number)[],
 ): Promise<Response> {
+  const body = JSON.stringify(command)
+  if (new TextEncoder().encode(body).byteLength > MAX_REDIS_COMMAND_BYTES)
+    throw new Error('Oversized Redis command')
   // Never automatically replay a write after an uncertain network result.
   const response = await fetch(config.redisOrigin, {
     method: 'POST',
@@ -15,7 +19,7 @@ async function sendRedisCommand(
       Authorization: `Bearer ${config.redisToken}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(command),
+    body,
     redirect: 'manual',
     signal: AbortSignal.timeout(REDIS_TIMEOUT_MS),
   })
