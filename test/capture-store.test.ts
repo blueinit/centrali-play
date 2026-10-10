@@ -5,6 +5,7 @@ import {
   findCaptureSession,
 } from '../src/capture-store'
 import { redisCommand } from '../src/redis'
+import { DEFAULT_SESSION_LIMITS, sessionLimitKey } from '../src/session-limits'
 import {
   captureFixture,
   config,
@@ -29,6 +30,7 @@ describe('atomic capture storage against real Redis', () => {
             session.eventsKey,
             session.metadataKey,
             session.lookupKey,
+            sessionLimitKey(session.id),
           ]),
         { timeout: 4_000, interval: 100 },
       )
@@ -39,7 +41,10 @@ describe('atomic capture storage against real Redis', () => {
     const session = await captureFixture(keys)
     const results = await Promise.all(
       Array.from({ length: 70 }, () =>
-        appendCapture(config, session, emptyCapture),
+        appendCapture(config, session, emptyCapture, {
+          ...DEFAULT_SESSION_LIMITS,
+          capturePerMinute: 100,
+        }),
       ),
     )
     expect(results.every(Boolean)).toBe(true)

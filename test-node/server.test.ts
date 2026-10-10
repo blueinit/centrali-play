@@ -10,6 +10,7 @@ import { sessionConfig } from '../src/config'
 import { sessionKeys } from '../src/session-store'
 import { tokenDigest } from '../src/tokens'
 import { eventKey } from '../src/capture-store'
+import { sessionLimitKey } from '../src/session-limits'
 import type { CreatedSession } from '../src/session-service'
 import type { EventPage } from '../src/read-store'
 
@@ -29,6 +30,12 @@ test('Node startup validates configuration and defaults to loopback', () => {
     nodeConfig({ ...localEnv, DISABLE_STORAGE_ROUTES: 'yes' }),
   )
   assert.throws(() => nodeConfig({ ...localEnv, UPSTASH_REDIS_REST_TOKEN: '' }))
+  assert.throws(() => nodeConfig({ ...localEnv, READ_PER_MINUTE: '0' }))
+  assert.equal(
+    nodeConfig({ ...localEnv, READ_PER_SESSION: '3' }).bindings
+      .READ_PER_SESSION,
+    '3',
+  )
 })
 
 test('built executable rejects invalid config without leaking values', () => {
@@ -45,6 +52,7 @@ test('Node HTTP server captures and reads through real Redis', async () => {
   const bridge = await startRedisHttp(process.env.REDIS_TEST_URL)
   const bindings = {
     ...localEnv,
+    READ_PER_SESSION: '3',
     UPSTASH_REDIS_REST_URL: `http://127.0.0.1:${bridge.port}`,
   }
   const config = sessionConfig(bindings)
@@ -62,7 +70,11 @@ test('Node HTTP server captures and reads through real Redis', async () => {
     assert.equal(creation.status, 201)
     const session = (await creation.json()) as CreatedSession
     const hash = await tokenDigest(session.captureUrl.split('/').at(-1)!)
-    keys.push(...sessionKeys(session.id, hash), eventKey(session.id))
+    keys.push(
+      ...sessionKeys(session.id, hash),
+      eventKey(session.id),
+      sessionLimitKey(session.id),
+    )
     const payload = new Uint8Array([0, 255, 10, 128])
     const capture = await fetch(session.captureUrl, {
       method: 'POST',
@@ -97,6 +109,10 @@ test('Node HTTP server captures and reads through real Redis', async () => {
     const head = await fetch(url, { method: 'HEAD', headers })
     assert.equal(head.status, 200)
     assert.equal(await head.text(), '')
+    const limited = await fetch(url, { headers })
+    assert.equal(limited.status, 429)
+    assert.deepEqual(await limited.json(), { error: 'rate_limited' })
+    assert.ok(Number(limited.headers.get('Retry-After')) > 0)
   } finally {
     server.closeAllConnections()
     await new Promise<void>((resolve) => server.close(() => resolve()))

@@ -3,6 +3,7 @@ import type { Bindings } from '../src/config'
 import { sessionConfig } from '../src/config'
 import type { CaptureInput } from '../src/capture-input'
 import { eventKey } from '../src/capture-store'
+import { sessionLimitKey } from '../src/session-limits'
 import { redisCommand } from '../src/redis'
 import { createSessionCommand, sessionKeys } from '../src/session-store'
 import { generateSessionTokens, tokenDigest } from '../src/tokens'
@@ -27,7 +28,7 @@ export async function captureFixture(keys: string[], lifetime = 3_600) {
   }
   const [metadataKey, lookupKey] = sessionKeys(tokens.id, captureHash)
   const eventsKey = eventKey(tokens.id)
-  keys.push(metadataKey, lookupKey, eventsKey)
+  keys.push(metadataKey, lookupKey, eventsKey, sessionLimitKey(tokens.id))
   const expiresAt = await redisCommand(
     config,
     createSessionCommand(record, lifetime),

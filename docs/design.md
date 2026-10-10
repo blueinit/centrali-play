@@ -1,6 +1,6 @@
 # Design
 
-The standalone Node server and local Worker implement health checks, session creation, bounded capture, authorized event reads, and operator shutdown switches. Admission limits remain planned. API details and limits may change before the first release.
+The standalone Node server and local Worker implement health checks, session creation, bounded capture, authorized event reads, per-session limits, and operator shutdown switches. Global admission limits remain planned. API details and limits may change before the first release.
 
 ## Architecture
 

@@ -1,4 +1,8 @@
 export type Bindings = {
+  CAPTURE_PER_MINUTE?: string
+  CAPTURE_PER_SESSION?: string
+  READ_PER_MINUTE?: string
+  READ_PER_SESSION?: string
   DISABLE_SESSION_CREATION?: string
   DISABLE_STORAGE_ROUTES?: string
   PUBLIC_BASE_URL?: string
