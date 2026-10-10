@@ -2,7 +2,7 @@
 
 Play has a standalone Node.js server and Docker image. Neither requires a Cloudflare account or Wrangler at runtime. Both use the same session, capture, and read handlers as the local Worker tests.
 
-This is a runtime foundation, not a public-launch release: rate limits and strict workload budgets remain unimplemented. Keep instances private while those protections and hosted compatibility checks are completed.
+This is a runtime foundation, not a public-launch release: per-session limits are implemented, but global admission and strict workload budgets remain unimplemented. Keep instances private while those protections and hosted compatibility checks are completed.
 
 ## Local Node server
 
@@ -37,6 +37,8 @@ Session/capture/read scripts require Redis scripting and the commands described 
 Use a separate database for each environment. Check current provider quotas and spending settings before provisioning. This setup does not create resources, choose a paid plan, or provide a dollar spending guarantee. Native Redis TCP support is still planned; the development bridge does not make that a production-supported backend.
 
 ## Docker
+
+Optional [per-session limit variables](session-limits.md#configuration) let operators configure capture and read allowances. Use the same values on instances sharing a database; changing them requires restarting the Node process.
 
 Build from the repository root:
 

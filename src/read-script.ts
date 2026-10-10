@@ -1,10 +1,12 @@
+import { SESSION_LIMIT_SCRIPT } from './session-limit-script'
+
 export const MAX_PAGE_EVENTS = 10
 export const MAX_READ_RESPONSE_BYTES = 262_144
 export const MAX_READ_REPLY_BYTES = 262_144
 const REDIS_PAGE_BUDGET_BYTES = 196_608
 
 // Keep integer components as strings: Lua numbers cannot represent every stream ID.
-export const READ_EVENTS_SCRIPT = `
+export const READ_EVENTS_SCRIPT = `${SESSION_LIMIT_SCRIPT}
 local function componentCompare(left, right)
   if #left ~= #right then return #left < #right and -1 or 1 end
   if left == right then return 0 end
@@ -53,7 +55,11 @@ if session.id ~= ARGV[1] or session.readTokenHash ~= ARGV[2] then return nil end
 if type(session.expiresAt) ~= 'number' or session.expiresAt ~= math.floor(session.expiresAt) then
   return redis.error_reply('Invalid session deadline')
 end
-if session.expiresAt <= tonumber(redis.call('TIME')[1]) then return nil end
+local now = tonumber(redis.call('TIME')[1])
+if session.expiresAt <= now then return nil end
+local retry = sessionAllowance(KEYS[3], 'read', now, session.expiresAt,
+  tonumber(ARGV[5]), tonumber(ARGV[6]))
+if retry > 0 then return { 'rate_limited', retry } end
 
 local after = ARGV[3]
 local oldest = redis.call('XRANGE', KEYS[2], '-', '+', 'COUNT', 1)

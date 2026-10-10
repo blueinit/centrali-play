@@ -67,7 +67,7 @@ Selection, retention comparison, and `hasMore` use one consistent Redis script s
 
 ## Polling and cost
 
-Clients can fetch the next page immediately while `hasMore` is true. Otherwise begin polling at five-second intervals. After empty pages, back off to 10, 20, and then 30 seconds, with jitter; reset after receiving events. Stop at `expiresAt` or a 404. Retry a 503 with backoff. Honor `Retry-After` on future 429 responses, and never automatically create a replacement session.
+Clients can fetch the next page immediately while `hasMore` is true, subject to their read allowance. Otherwise begin polling at five-second intervals. After empty pages, back off to 10, 20, and then 30 seconds, with jitter; reset after receiving events. Stop at `expiresAt` or a 404. Retry a 503 with backoff. Honor `Retry-After` on 429 responses, and never automatically create a replacement session.
 
 The successful read path uses two Redis HTTP calls: metadata authorization and atomic page selection. HEAD also needs Redis-time and cursor validation; Redis examines the stream boundaries, but no event payloads are transferred to or parsed by the Worker. Empty polling still has a cost: polling every five seconds for one hour would use approximately 1,440 HTTP calls before retries or pagination. Backoff reduces that load. Provider command billing can differ from HTTP call counts; measure both commands and bandwidth before launch.
 
@@ -80,9 +80,10 @@ The successful read path uses two Redis HTTP calls: metadata authorization and a
 | 401    | `unauthorized`        | Missing or malformed bearer credentials.                                       |
 | 404    | `not_found`           | Malformed ID, unknown or expired session, or incorrect read capability.        |
 | 405    | `method_not_allowed`  | Unsupported method.                                                            |
+| 429    | `rate_limited`        | The session's minute or lifetime read allowance is exhausted.                  |
 | 503    | `service_unavailable` | Storage, transport, schema validation, or configuration failure.               |
 
-Rate thresholds and 429 behavior belong to the abuse-control stage. Preserve creation and capture behavior while adding focused modules for HTTP validation, authorization, page selection, and stored-event parsing.
+The [per-session limits](session-limits.md) define thresholds, Redis-time windows, fixed counter expiry, and 429 behavior. Authorized HEAD, empty polls, and future-cursor attempts consume read admissions. Incorrect credentials do not consume the owner's allowance.
 
 Tests must cover credential separation and cross-session denial; malformed input before storage access; timing-safe digest validation; empty reads; exclusive cursors; numeric ordering and 64-bit boundaries; count and byte pagination; largest accepted captures; retention warnings; unchanged empty-page cursors; future cursors; safe JSON/cache headers; HEAD/OPTIONS behavior; and backend failures without payload exposure.
 
