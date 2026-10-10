@@ -10,11 +10,11 @@ function disabled(value: string | undefined): boolean {
   throw new Error('Invalid shutdown configuration')
 }
 
-function storageDisabled(env: Bindings, route: StorageRoute): boolean {
+export function shutdownConfig(env: Bindings) {
   // Validate both switches on every storage route; a typo must fail closed.
   const all = disabled(env.DISABLE_STORAGE_ROUTES)
   const creation = disabled(env.DISABLE_SESSION_CREATION)
-  return all || (route === 'creation' && creation)
+  return { all, creation }
 }
 
 export function storageControl(
@@ -23,7 +23,8 @@ export function storageControl(
   return async (c, next) => {
     let stop = true
     try {
-      stop = storageDisabled(c.env, route)
+      const shutdown = shutdownConfig(c.env)
+      stop = shutdown.all || (route === 'creation' && shutdown.creation)
     } catch {
       // Do not expose configuration values or proceed with an unsafe switch.
     }

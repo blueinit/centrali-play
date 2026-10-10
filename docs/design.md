@@ -1,11 +1,12 @@
 # Design
 
-The local Worker implements health checks, session creation, bounded capture, and authorized event reads. Abuse controls remain planned. API details and limits may change before the first release.
+The standalone Node server and local Worker implement health checks, session creation, bounded capture, authorized event reads, and operator shutdown switches. Admission limits remain planned. API details and limits may change before the first release.
 
 ## Architecture
 
 - API-only webhook receiver; clients provide their own viewer.
-- TypeScript and Hono on Workers, Redis storage, Upstash for initial hosting.
+- TypeScript and Hono, with standalone Node operation and local Worker compatibility tests.
+- Redis storage through Upstash's HTTP interface; native TCP support remains planned.
 - Self-contained deployment with dedicated storage and credentials.
 - Fixed lifetime, bounded captures, and abuse controls.
 

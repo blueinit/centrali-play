@@ -14,16 +14,19 @@ Read the [design](docs/design.md) and [roadmap](docs/roadmap.md) first. Discuss 
 
 Install Node.js 24.2 or newer and run `npm ci`. CI uses Node.js 24. The lockfile pins dependency versions; use `npm ci` for reproducible installs. Start dedicated Redis with `docker compose up -d --wait` before running tests. See the README for the full local development setup.
 
-| Command                | Purpose                                                  |
-| ---------------------- | -------------------------------------------------------- |
-| `npm run dev`          | Start the local Worker on 127.0.0.1:8787.                |
-| `npm run check`        | Run all checks used by CI.                               |
-| `npm run typecheck`    | Generate Worker types and check strict TypeScript types. |
-| `npm test`             | Run tests in the local Worker runtime.                   |
-| `npm run test:watch`   | Re-run tests as files change.                            |
-| `npm run format`       | Format source, configuration, and documentation.         |
-| `npm run format:check` | Check formatting without changing files.                 |
-| `npm run build`        | Bundle into dist using Wrangler dry-run; no deployment.  |
+| Command                | Purpose                                                           |
+| ---------------------- | ----------------------------------------------------------------- |
+| `npm run dev`          | Start the local Worker on 127.0.0.1:8787.                         |
+| `npm run check`        | Run all checks used by CI.                                        |
+| `npm run typecheck`    | Generate Worker types and check strict TypeScript types.          |
+| `npm test`             | Run tests in the local Worker runtime.                            |
+| `npm run test:watch`   | Re-run tests as files change.                                     |
+| `npm run format`       | Format source, configuration, and documentation.                  |
+| `npm run format:check` | Check formatting without changing files.                          |
+| `npm run build`        | Bundle into dist using Wrangler dry-run; no deployment.           |
+| `npm run build:node`   | Build the standalone Node entry point.                            |
+| `npm run start:local`  | Start the Node server using the ignored `.env` file.              |
+| `npm run test:node`    | Test the Node listener and Redis flow outside the Worker runtime. |
 
 Local development needs no hosted account or credentials. Tests use a dedicated Redis instance at `redis://127.0.0.1:6380` and start their own loopback HTTP bridge. To use a different local test port, set `REDIS_TEST_URL`; only loopback Redis is permitted. Never use a shared or production database. Tests delete only their own generated keys and never flush the database.
 
@@ -32,6 +35,7 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 ## Repository structure
 
 - `src/index.ts`: Hono app and Worker entry point.
+- `src/server.ts`, `src/node-server.ts`, and `src/node-config.ts`: standalone Node lifecycle, listener, and startup validation.
 - `src/storage-controls.ts`: operator shutdown switches before body or storage work.
 - `src/sessions.ts`: HTTP validation and session creation responses.
 - `src/session-service.ts`: credential creation and bounded collision retries.
@@ -48,6 +52,8 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 - `src/redis.ts`: bounded HTTP transport with a timeout and no automatic write retries.
 - `src/config.ts`: environment and origin validation.
 - `test/worker.test.ts`: HTTP contract tests in the Worker runtime.
+- `test-node/server.test.ts`: standalone startup and HTTP checks against dedicated Redis.
+- `Dockerfile`: standalone image, with only runtime dependencies in the final stage.
 - `test/sessions.test.ts` and `test/session-store.test.ts`: session behavior, storage, concurrency, and expiry tests.
 - `scripts/redis-http.ts`: development/test bridge to a dedicated local Redis instance.
 - `scripts/redis-http-handler.ts`: local bridge authentication and command validation.

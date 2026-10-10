@@ -18,6 +18,7 @@
     "src/**/*.ts",
     "scripts/**/*.ts",
     "test/**/*.ts",
+    "test-node/**/*.ts",
     "vitest.config.ts",
     "worker-configuration.d.ts"
   ]

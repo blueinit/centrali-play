@@ -13,11 +13,11 @@ Play is designed to be a self-contained service that any application can use to 
 ## Stack
 
 - Strict TypeScript and Hono.
-- Cloudflare Workers, npm, and Wrangler for development.
+- Node.js for standalone operation; a local Worker harness for compatibility tests.
 - Vitest in the local Worker runtime, TypeScript checking, and Prettier formatting.
 - Redis stores session metadata and credentials with fixed expiry; initial hosting targets Workers and Upstash free tiers.
 
-Self-hosting is a planned path, not a supported capability today.
+The [standalone Node server and Docker setup](docs/running.md) run without Cloudflare tooling and support Upstash Redis over HTTPS. Native Redis TCP support and public-launch protections remain planned.
 
 ## Local development
 
@@ -77,12 +77,13 @@ docker compose up -d --wait
 npm run check
 ```
 
-This runs formatting checks, TypeScript checks, tests against local Redis in the Worker runtime, and a dry-run bundle. Tests start and stop their own HTTP bridge; `npm run dev:redis` is not required for them. It does not deploy or create hosted resources.
+This runs formatting and TypeScript checks, Worker and Node tests against local Redis, and both runtime builds. Tests start and stop their own HTTP bridge; `npm run dev:redis` is not required for them. It does not deploy or create hosted resources.
 
 Individual commands and repository structure are documented in [Contributing](CONTRIBUTING.md).
 
 ## Documentation
 
+- [Running Play](docs/running.md): standalone Node/Docker setup, Upstash configuration, and shutdown.
 - [Design](docs/design.md): architecture, proposed API, and open decisions.
 - [Session contract](docs/sessions.md): creation response, credentials, expiry, and configuration.
 - [Capture contract](docs/capture.md): methods, limits, redaction, binary encoding, and storage.

@@ -14,7 +14,7 @@ Private vulnerability reporting and dependency alerts are enabled. Dependabot ch
 
 ## Releases
 
-No release or deployment exists. Before `v0.1.0`, verify clean-checkout setup, expiry/concurrency, authorization, limits, backend failures, safe logs, and realistic polling costs. Finalize API documentation and supported versions.
+No release or deployment exists. The [standalone runtime guide](running.md) covers Node/Docker operation with Upstash. Before `v0.1.0`, verify clean-checkout setup, expiry/concurrency, authorization, limits, backend failures, safe logs, and realistic polling costs. Finalize API documentation and supported versions.
 
 For routine PRs, run `npm ci`, `docker compose up -d --wait`, and `npm run check` from a clean checkout. A successful dry-run bundle is not approval to deploy. The current Worker supports bounded capture, authorized reads, and operator shutdown switches, but admission limits remain unimplemented. It is intended for local development only; public Worker and preview URLs are disabled in configuration.
 
@@ -22,7 +22,7 @@ Use semantic version tags and release notes explaining behavior, compatibility, 
 
 ## Deployment and spending
 
-The initial deployment target is Workers with Upstash Redis. Operators choose plans appropriate to their traffic and availability requirements. Prefer local tests; keep hosted test and production credentials separate.
+The app can run on Node/Docker with Upstash Redis. A local Worker harness verifies runtime compatibility; host-specific production infrastructure belongs to operator deployment configuration. Operators choose plans appropriate to their traffic and availability requirements. Prefer local tests; keep hosted test and production credentials separate.
 
 Store credentials in platform secrets, never Git, fixtures, screenshots, or logs. A reviewed deployment workflow must use minimal permissions, pinned action commits, and a production approval gate. Untrusted fork PRs must not receive secrets.
 
