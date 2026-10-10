@@ -59,7 +59,7 @@ Hashes do not make capture URLs safe to disclose. Platform access logs, client l
 
 ## Expiry and atomic creation
 
-The initial lifetime is 3,600 seconds. The storage operation establishes one absolute deadline. Metadata, the capture-token lookup, and capture storage all expire at that deadline. Creating no events must not leave a permanent lookup key.
+The initial lifetime is up to 3,600 seconds from global admission. A confirmed collision retry can shorten it slightly; creation never extends its pending reservation's deadline. Metadata, the capture-token lookup, and capture storage all expire at the established deadline. Creating no events must not leave a permanent lookup key. See [global session admission](session-admission.md) for shared creation/capacity limits.
 
 All creation writes must succeed atomically. A collision must never overwrite an existing session; generate fresh values and retry only a bounded number of times. Activity and reads never move the deadline. Later capture operations must atomically check the session's deadline before writing so an expired session cannot be recreated by a racing request.
 
@@ -83,7 +83,7 @@ Errors use JSON with a stable error code and `Cache-Control: no-store`. Response
 | 429    | `{"error":"rate_limited"}`        | The caller has exceeded creation limits. Include `Retry-After`.                   |
 | 503    | `{"error":"service_unavailable"}` | Storage is unavailable, quotas are exhausted, or configuration prevents creation. |
 
-The server detects an unexpected body without buffering an unbounded request. Creation-rate thresholds and the precise quota-exhaustion behavior will be documented with abuse controls. The 429 response is reserved for those controls and is not implemented yet. Backend failures, including backend quota errors, currently return 503. Session creation must not be publicly deployed before abuse controls exist.
+The server detects an unexpected body without buffering an unbounded request. Global creation/capacity exhaustion returns safe 503 with bounded `Retry-After`, as described in the admission contract. The 429 response remains reserved for per-client creation controls and is not implemented yet. Backend failures, including backend quota errors, return 503. Public deployment still requires global workload protection and ingress controls.
 
 ## Storage and configuration
 

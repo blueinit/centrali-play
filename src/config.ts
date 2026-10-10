@@ -1,4 +1,8 @@
 export type Bindings = {
+  SESSION_ADMISSION_SCOPE?: string
+  SESSIONS_PER_HOUR?: string
+  SESSIONS_PER_DAY?: string
+  MAX_ACTIVE_SESSIONS?: string
   CAPTURE_PER_MINUTE?: string
   CAPTURE_PER_SESSION?: string
   READ_PER_MINUTE?: string

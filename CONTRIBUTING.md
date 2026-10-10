@@ -40,6 +40,7 @@ Worker tests load the Wrangler configuration with test bindings. Build output, l
 - `src/session-limits.ts` and `src/session-limit-script.ts`: validated allowances, safe rate-limit replies, and atomic expiring counters.
 - `src/sessions.ts`: HTTP validation and session creation responses.
 - `src/session-service.ts`: credential creation and bounded collision retries.
+- `src/session-admission.ts` and `src/session-admission-script.ts`: global creation configuration, safe denials, and atomic pending/live capacity.
 - `src/tokens.ts`: random credentials and token digests.
 - `src/body.ts`: bounded stream reading and request-body detection.
 - `src/captures.ts`: capture HTTP validation and responses.

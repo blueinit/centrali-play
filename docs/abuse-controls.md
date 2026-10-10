@@ -1,6 +1,6 @@
 # Abuse-control contract
 
-This defines the abuse-control implementation stage. Operator shutdown switches and [per-session limits](session-limits.md) are implemented locally; global admission limits, identity policy, and workload budgets below remain proposed. Public deployment requires the complete stage, hosted compatibility tests, quota measurements, and a reviewed release workflow.
+This defines the abuse-control implementation stage. Operator shutdown switches, [per-session limits](session-limits.md), and [global session admission](session-admission.md) are implemented locally; edge identity policy and workload budgets below remain proposed. Public deployment requires the complete stage, hosted compatibility tests, quota measurements, and a reviewed release workflow.
 
 ## Two layers of admission
 

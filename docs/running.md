@@ -2,7 +2,7 @@
 
 Play has a standalone Node.js server and Docker image. Neither requires a Cloudflare account or Wrangler at runtime. Both use the same session, capture, and read handlers as the local Worker tests.
 
-This is a runtime foundation, not a public-launch release: per-session limits are implemented, but global admission and strict workload budgets remain unimplemented. Keep instances private while those protections and hosted compatibility checks are completed.
+This is a runtime foundation, not a public-launch release: per-session limits and global session admission are implemented, but strict workload budgets remain unimplemented. Keep instances private while those protections and hosted compatibility checks are completed.
 
 ## Local Node server
 
@@ -39,6 +39,8 @@ Use a separate database for each environment. Check current provider quotas and 
 ## Docker
 
 Optional [per-session limit variables](session-limits.md#configuration) let operators configure capture and read allowances. Use the same values on instances sharing a database; changing them requires restarting the Node process.
+
+[Global session admission variables](session-admission.md#configuration) configure shared creation/capacity limits. All instances of one deployment must use the same admission scope and limits. The scope is an operator setting, never a request-selected identity.
 
 Build from the repository root:
 
