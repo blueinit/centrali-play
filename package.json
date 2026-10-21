@@ -25,7 +25,7 @@
     "check": "npm run format:check && npm run typecheck && npm test && npm run build && npm run build:node && npm run test:node"
   },
   "dependencies": {
-    "@hono/node-server": "2.1.4",
+    "@hono/node-server": "2.1.5",
     "hono": "4.13.13"
   },
   "devDependencies": {
