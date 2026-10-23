@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-plugin": "1.4.0",
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "esbuild": "0.28.2",
     "prettier": "3.9.10",
     "redis": "6.3.0",
