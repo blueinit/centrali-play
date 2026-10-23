@@ -2,13 +2,32 @@
 
 A small, disposable webhook capture API. Create a temporary session, send HTTP requests to its capture URL, and retrieve the captured requests as JSON.
 
-**Early development:** health checks, session creation, bounded capture, authorized event reads, session/global limits, and operator shutdown switches work locally. No hosted service is available; public deployment awaits ingress controls and hosted verification.
+**Hosted API:** `https://play.centrali.io` · [Usage guide](https://docs.centrali.io/getting-started/centrali-play/) · [Overview and preview](https://centrali.io/play)
+
+Create a temporary webhook destination without an account, capture a test request, and retrieve events with a separate read token. Play is API only; use curl or provide your own viewer. Shared capacity and rate limits apply.
 
 ## Purpose
 
 Play gives someone testing webhook delivery an endpoint without requiring an account or their own receiver. It is API only; consumers provide their own viewer.
 
 Play is designed to be a self-contained service that any application can use to test webhook delivery.
+
+## Try the hosted API
+
+```sh
+curl -X POST https://play.centrali.io/sessions
+
+# Use the captureUrl returned above:
+curl -X POST '<captureUrl>' \
+  -H 'Content-Type: application/json' \
+  --data '{"example":"hello"}'
+
+# Use the id and readToken returned at creation:
+curl 'https://play.centrali.io/sessions/<session-id>/events?after=0-0' \
+  -H 'Authorization: Bearer <read-token>'
+```
+
+Sessions expire after one hour by default. Bodies are limited to 64 KiB and the latest 50 events are retained. Event bodies are base64 encoded. Read the [usage guide](https://docs.centrali.io/getting-started/centrali-play/) for pagination, polling, and error handling. Use synthetic data and keep both credentials private; body content is not scrubbed for secrets.
 
 ## Stack
 
@@ -97,7 +116,7 @@ Individual commands and repository structure are documented in [Contributing](CO
 - [Maintaining](docs/maintaining.md): ownership, releases, deployment, and incidents.
 - [Security](SECURITY.md): private reporting and data handling.
 
-Do not send production secrets or personal data to a future hosted demo. Capture URLs and read tokens are sensitive capabilities.
+Do not send production secrets or personal data to the hosted service. Capture URLs and read tokens are sensitive capabilities.
 
 ## License
 
